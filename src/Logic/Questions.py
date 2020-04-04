@@ -1,6 +1,4 @@
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from variables import *
-
 
 def a_type(update,context):
     UM.create_user(User(update.message.chat.id,update.message.chat.username))
