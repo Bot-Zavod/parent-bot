@@ -4,7 +4,6 @@ from database import DbInterface
 from os import getcwd, environ
 from user import UserManager
 from random import randint
-from variables import *
 from etc import text
 import logging
 

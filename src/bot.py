@@ -6,7 +6,6 @@ from os import getcwd, environ
 from random import randint
 from database import DbInterface
 from user import UserManager, User
-from variables import *
 
 
 CHOOSE_LANG, CHECK_PASSWORD, ADMIN, GAMES, BACK, ASK_TYPE,\
