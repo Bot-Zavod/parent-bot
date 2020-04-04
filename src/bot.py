@@ -1,6 +1,7 @@
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler)
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from Logic.Payment import pay, successful_payment_callback, precheckout_callback
+from Logic.Actions import *
 from os import environ
 
 CHOOSE_LANG, CHECK_PASSWORD, ADMIN, GAMES, BACK, ASK_TYPE,\
