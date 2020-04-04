@@ -18,10 +18,6 @@ def start(update, context):
     pass
 
 
-def admin(update, context):
-    pass
-
-
 def done(update, context):
     update.message.reply_text('END')
     return ConversationHandler.END
