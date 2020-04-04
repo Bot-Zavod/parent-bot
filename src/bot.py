@@ -9,18 +9,15 @@ from random import randint
 from database import DbInterface
 from user import UserManager, User
 from variables import *
+from Logic.Payment import pay, successful_payment_callback, precheckout_callback
 
 
-# Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 db = DbInterface(getcwd() + "/database.db")
-
 UM = UserManager()
+
 
 def get_games_id(update,context):
     answer = UM.currentUsers[update.message.chat.id].answers
@@ -39,11 +36,13 @@ def get_games_id(update,context):
     
     return game_id
 
+
 def start_query(update, context):
     reply_keyboard = [[text["games"]],[text["random"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["start_games"], reply_markup = markup)
     return GAMES
+
 
 def game_start(update,context):
     if update.message.text == text["games"]:
@@ -51,11 +50,13 @@ def game_start(update,context):
     elif update.message.text == text["random"]:
         return rand(update,context)
 
+
 def rand(update,context):
     reply_keyboard = [[text["back"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(games[randint(1,53)], reply_markup = markup)
     return BACK
+
 
 def back(update,context):
     if update.message.text == text["back"]:
@@ -69,6 +70,7 @@ def back_answer(update,context):
         return result(update,context)
     elif massage == text["menu"]:
         return start_query(update, context)
+
 
 
 def start(update, context):
@@ -98,10 +100,17 @@ def main():
     necessary_hendlers = [CommandHandler('stop', done),
                           CommandHandler('start', start),
                           CommandHandler('admin', admin)]
+
+
+    # Payment logic
+	dispatcher.add_handler(CommandHandler('pay', pay))
+	dispatcher.add_handler(PreCheckoutQueryHandler(precheckout_callback))
+	dispatcher.add_handler(MessageHandler(Filters.successful_payment, successful_payment_callback))
+
+
     # Add conversation handler with the states CHOOSE_LANG, ASK_AGE, ASK_AMOUNT, ASK_LOCATION, ASK_PROPS and START_QUERY
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
-
         states={
             ADMIN: [MessageHandler(Filters.text, admin_password),*necessary_hendlers],
             ADMIN_PASSWORD: [MessageHandler(Filters.text, new_password),*necessary_hendlers],
@@ -118,16 +127,13 @@ def main():
             ANSWER: [MessageHandler(Filters.text, final_answer),*necessary_hendlers],
             BACK_ANSWER: [MessageHandler(Filters.text, back_answer),*necessary_hendlers],
         },
-
         fallbacks=[CommandHandler('stop', done)]
     )
 
     dp.add_handler(conv_handler)
-
     dp.add_error_handler(error)
 
     updater.start_polling()
-
     updater.idle()
 
 
