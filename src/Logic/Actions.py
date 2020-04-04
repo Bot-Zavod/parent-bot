@@ -1,7 +1,7 @@
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ConversationHandler
 from database import DbInterface
-from os import getcwd, environ
+from os import getcwd
 from user import UserManager
 from random import randint
 from etc import text

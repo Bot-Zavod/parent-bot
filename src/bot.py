@@ -1,11 +1,7 @@
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler)
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from Logic.Payment import pay, successful_payment_callback, precheckout_callback
-from etc import text
-from os import getcwd, environ
-from random import randint
-from database import DbInterface
-from user import UserManager, User
+from os import environ
 
 CHOOSE_LANG, CHECK_PASSWORD, ADMIN, GAMES, BACK, ASK_TYPE,\
 ASK_AGE, ASK_AMOUNT, ASK_LOCATION, ASK_PROPS, RESULT,\
