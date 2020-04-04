@@ -1,10 +1,10 @@
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ConversationHandler
 from database import DbInterface
-from os import getcwd
-from user import UserManager
+from Entities.User import UserManager
+from Entities.etc import text
 from random import randint
-from etc import text
+from os import getcwd
 import logging
 
 
