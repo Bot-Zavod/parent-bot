@@ -12,11 +12,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-def start(update, context):
-    update.message.reply_text(text["start"], reply_markup = ReplyKeyboardRemove())
-    pass
-
-
 def done(update, context):
     update.message.reply_text('END')
     return ConversationHandler.END
