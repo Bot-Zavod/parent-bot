@@ -1,8 +1,6 @@
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-CHOOSE_LANG, CHECK_PASSWORD, ADMIN, GAMES, BACK, ASK_TYPE,\
-ASK_AGE, ASK_AMOUNT, ASK_LOCATION, ASK_PROPS, RESULT,\
-ANSWER,BACK_ANSWER, ADMIN_PASSWORD = range(14)
+from variables import *
 
 def a_type(update,context):
     UM.create_user(User(update.message.chat.id,update.message.chat.username))

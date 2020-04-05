@@ -1,45 +1,36 @@
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ConversationHandler
-from database import DbInterface
-from Entities.User import UserManager
-from Entities.etc import text
 from random import randint
 from os import getcwd
 import logging
 
+from etc import text
+from database import DbInterface
+from variables import *
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def done(update, context):
-    update.message.reply_text('END')
-    return ConversationHandler.END
 
+# def get_games_id(update,context):
+# 	db = DbInterface(getcwd() + "/database.db")
+# 	UM = UserManager()
+#     # answer = UM.currentUsers[update.message.chat.id]
+#     game_id = []
+#     game_id += db.getGames(answer[0],answer[1],answer[2],answer[3],answer[4])
 
-def error(update, context):
-    """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, context.error)
-
-
-def get_games_id(update,context):
-	db = DbInterface(getcwd() + "/database.db")
-	UM = UserManager()
-    answer = UM.currentUsers[update.message.chat.id].answers
-    game_id = []
-    game_id += db.getGames(answer[0],answer[1],answer[2],answer[3],answer[4])
-
-    if None in answer:
-        keys = [[0,1,2],[0,1],[0,1,2],[0,1],[0,1]]
-        data = [answer[0],answer[1],answer[2],answer[3],answer[4]]
-        for j in range(5):
-            if answer[j] == None:
-                for i in keys[j]:
-                    data[j] = i
-                    game_id += db.getGames(*data)
-        game_id = sorted(list(set(game_id)))
+#     if None in answer:
+#         keys = [[0,1,2],[0,1],[0,1,2],[0,1],[0,1]]
+#         data = [answer[0],answer[1],answer[2],answer[3],answer[4]]
+#         for j in range(5):
+#             if answer[j] == None:
+#                 for i in keys[j]:
+#                     data[j] = i
+#                     game_id += db.getGames(*data)
+#         game_id = sorted(list(set(game_id)))
     
-    return game_id
+#     return game_id
 
 
 def start_query(update, context):
@@ -70,7 +61,6 @@ def back(update,context):
 
 def back_answer(update,context):
     massage = update.message.text
-    lang = UM.currentUsers[update.message.chat.id].lang
     if massage == text["back"]:
         return result(update,context)
     elif massage == text["menu"]:
