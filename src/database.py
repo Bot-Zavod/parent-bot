@@ -82,6 +82,6 @@ class DbInterface:
             self.conn.commit()
             print(f"Your request {Location, Age, Type, Props} failed")
 
-DB = DbInterface('database.db')
-DB.add_visitor(2)
+# DB = DbInterface('database.db')
+# DB.add_visitor(2)
 # print(DB.check_payed_user(2))
