@@ -1,14 +1,15 @@
 import sqlite3
-from pprint import PrettyPrinter
+import os
+
 
 class DbInterface:
     def __init__(self, path):
         self.conn = sqlite3.connect(path, check_same_thread = False)
         self.cursor = self.conn.cursor()
 
-    def add_visitor(self, chat_id):
-        sql = 'INSERT INTO Visitors (chat_id) VALUES (?)'
-        args = [chat_id]
+    def add_user(self, chat_id, username=None, first_name=None, second_name=None, email=None, phone=None):
+        sql = 'INSERT INTO Users (chat_id, username, first_name, second_name, email, phone) VALUES (?,?,?,?,?,?)'
+        args = [chat_id, username, first_name, second_name, email, phone]
         try:
             self.cursor.execute(sql, args)
             self.conn.commit()
@@ -39,7 +40,7 @@ class DbInterface:
     def check_payed_user(self, chat_id):
         """ Checks out if provided user in our payments tables
         return boolean answer"""
-        sql = 'SELECT EXISTS(SELECT * from Payments WHERE Chat_id = ?)'
+        sql = 'SELECT EXISTS(SELECT * from Payments WHERE chat_id = ?)'
         args = [chat_id]
         try:
             self.cursor.execute(sql, args)
@@ -82,6 +83,16 @@ class DbInterface:
             self.conn.commit()
             print(f"Your request {Location, Age, Type, Props} failed")
 
-# DB = DbInterface('database.db')
-# DB.add_visitor(2)
-# print(DB.check_payed_user(2))
+
+
+if __name__ == "__main__":
+    file = "database.db"
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, file)
+    print(db_path)
+    print()
+    print(os.getcwd())
+    print()
+    DB = DbInterface(db_path)
+    DB.add_user(383327735, 'alexeymarkovski', 'Alexey', 'Markovski', '380952793306')
+    print(DB.check_payed_user(383327735))

@@ -1,4 +1,4 @@
-from telegram.ext import (Updater, PreCheckoutQueryHandler, CommandHandler, MessageHandler, Filters, ConversationHandler)
+from telegram.ext import Updater, PreCheckoutQueryHandler, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from os import environ
 
@@ -8,20 +8,19 @@ from Logic.Methods import *
 from variables import *
 
 
+
 def main():
     updater = Updater(environ.get("API_KEY"), use_context=True)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
     necessary_hendlers = [CommandHandler('stop', done),
-                          CommandHandler('start', start),
-                          CommandHandler('terms', terms)]
+                          CommandHandler('start', start)]
                         # CommandHandler('admin', admin)]
 
-    # Payment logic
-    dispatcher.add_handler(CommandHandler('pay', pay))
-    dispatcher.add_handler(PreCheckoutQueryHandler(precheckout_callback))
-    dispatcher.add_handler(MessageHandler(Filters.successful_payment, successful_payment_callback))
+    dispatcher.add_handler(CallbackQueryHandler(subscribe, pattern='^(subscribe)$'))
+    dispatcher.add_handler(CallbackQueryHandler(demo, pattern='^(demo)$'))
+    dispatcher.add_handler(CommandHandler('terms', terms))
 
     # Add conversation handler with the states CHOOSE_LANG, ASK_AGE, ASK_AMOUNT, ASK_LOCATION, ASK_PROPS and START_QUERY
     conv_handler = ConversationHandler(
