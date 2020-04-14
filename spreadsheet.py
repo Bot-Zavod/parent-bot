@@ -2,7 +2,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 import pprint
 
-from src.database import DB
+from src.Logic.database import DB
 
 """
 #to get all the values inside the file
@@ -28,11 +28,9 @@ def spreadsheet():
 
 def data_filler(sheet):
     # pp = pprint.PrettyPrinter()
-
-    for i in range(2,108):
-        game = sheet.row_values(i)
-
-        game = [game[-1]] + game[:5]
+    games = sheet.get_all_values()
+    for game in games:
+        game = [game[-1].strip()] + game[:5]
         DB.set_game(*game)
     
     print("\n\nUPDATE was finished succesfully\n\n")

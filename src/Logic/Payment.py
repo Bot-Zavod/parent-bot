@@ -7,8 +7,8 @@ import base64
 import json
 import hashlib
 
-from variables import *
-from etc import text
+from .variables import *
+from .etc import text
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)

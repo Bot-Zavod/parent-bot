@@ -4,9 +4,9 @@ from random import randint
 from os import getcwd
 import logging
 
-from etc import text
-from database import DbInterface
-from variables import *
+from .etc import text
+from .database import DbInterface
+from .variables import *
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,29 +39,6 @@ def start_query(update, context):
     update.message.reply_text(text["start_games"], reply_markup = markup)
     return GAMES
 
-
-def game_start(update,context):
-    if update.message.text == text["games"]:
-        return a_type(update,context)
-    elif update.message.text == text["random"]:
-        return rand(update,context)
-
-
-def rand(update,context):
-    reply_keyboard = [[text["back"]]]
-    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(games[randint(1,53)], reply_markup = markup)
-    return BACK
-
-
 def back(update,context):
     if update.message.text == text["back"]:
-        return start_query(update, context)
-
-
-def back_answer(update,context):
-    massage = update.message.text
-    if massage == text["back"]:
-        return result(update,context)
-    elif massage == text["menu"]:
         return start_query(update, context)

@@ -3,34 +3,36 @@ from telegram.ext import ConversationHandler
 from os import getcwd
 import logging
 
-from database import DbInterface
-from variables import *
-from etc import text
-from Logic.Payment import subscribe
+from .database import DB
+from .variables import *
+from .etc import text
+from .Payment import subscribe
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-db = DbInterface("database.db")
-
 def start(update, context):
-    # Тут должна быть функция добавления пользователя в таблицу Users
-    # add_user(chat_id, username, first_name, second_name)
-    # Функция должна постоянно добавлять нового человека, если есть пропускать
+    chat_id = update.message.chat.id
 
-    # Так же надо сделать эту проверку
-    # is_pay = db.check_payed_user(update.message.chat.id)
-    isPayed = False #fix it!!!!!!
+    # check if user is already in DB, if not add him
+    if not DB.check_user(chat_id):
+        DB.add_user(chat_id)
+    
+    # check if user has payed already
+    isPayed = DB.check_payed_user(chat_id)
     if isPayed:
-        update.message.reply_text("Поиграй со своим малым! Вот игры...")
+        reply_keyboard = [[text["games"]]]
+        markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
+        update.message.reply_text("Поиграй со своим малым! Вот игры...", reply_markup = markup)
+        return ASK_LOCATION
     else:
-        text = "Привет дорогой друг! Вы можете глянуть демо игры или купить подписку!"
+        # text = "Привет дорогой друг! Вы можете глянуть демо игры или купить подписку!"
         demo_button = InlineKeyboardButton("Демо игры 🎲", callback_data = "demo")
         subscribe_button = InlineKeyboardButton("Оформить подписку ✅", callback_data = "subscribe")
         reply_markup = InlineKeyboardMarkup([[demo_button],[subscribe_button]])
-        update.message.reply_text(text=text, reply_markup=reply_markup)
+        update.message.reply_text(text="text", reply_markup=reply_markup)
 
     logger.info("User %s: send /start command;", update.message.chat.id)
 
@@ -58,4 +60,5 @@ def terms(update, context):
 
 def error(update, context):
     """Log Errors caused by Updates."""
+    update = 0
     logger.warning('Update "%s" caused error "%s"', update, context.error)
