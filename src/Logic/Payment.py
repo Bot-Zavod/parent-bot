@@ -73,7 +73,7 @@ def unsubscribe_confirm(update, context):
 	button = InlineKeyboardButton("Выполнено!", callback_data="unsubscribe_done_adm")
 	reply_markup = InlineKeyboardMarkup([[button]])
 	context.bot.send_message(
-		chat_id = '383327735', 
+		chat_id = '@otpisatsanado', 
 		text=text, 
 		reply_markup=reply_markup
 		)
@@ -90,7 +90,7 @@ def unsubscribe_done_adm(update, context):
 	logger.info("Adm 383327735: process app;")
 
 def no_unsubscribe(update, context):
-	text = 'Ваша зяавка на отписку отправлена!'
+	text = 'Ваша заявка на отписку отправлена!'
 	context.bot.delete_message(
 		chat_id = update.callback_query.message.chat.id, 
 		message_id = update.callback_query.message.message_id, 

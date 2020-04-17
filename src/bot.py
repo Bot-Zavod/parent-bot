@@ -6,10 +6,9 @@ from Logic.Commands import *
 from Logic.Payment import *
 from Logic.Methods import *
 from Logic.Questions import ask_location, ask_type, ask_age, ask_props, result, final_answer, back_answer
-
 from Logic.variables import *
 
-environ["API_KEY"] = '728358108:AAEd0cC2S2LW8HvBSuFbQP0EoA-jWJ5XyUQ'
+print("Succesfull start")
 
 def main():
     updater = Updater(environ.get("API_KEY"), use_context=True)

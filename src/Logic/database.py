@@ -14,64 +14,67 @@ class DbInterface:
     USER SECTION
     
     """
-    def add_user(self, chat_id, username=None, first_name=None, last_name=None, email=None, phone=None):
-        sql = 'INSERT INTO Users (chat_id, username, first_name, last_name, email, phone) VALUES (?,?,?,?,?,?)'
-        args = [chat_id, username, first_name, last_name, email, phone]
-        try:
-            self.cursor.execute(sql, args)
-            self.conn.commit()
-            return True
-        except sqlite3.IntegrityError:
-            print("User exists")
-            return False
+    # def add_user(self, chat_id):
+    #     sql = 'INSERT INTO Users (chat_id, username, first_name, last_name, email, phone) VALUES (?,?,?,?,?,?)'
+    #     args = [chat_id]
+    #     try:
+    #         self.cursor.execute(sql, args)
+    #         self.conn.commit()
+    #         return True
+    #     except sqlite3.IntegrityError:
+    #         print("User exists")
+    #         return False
     
-    def check_user(self, chat_id):
-        sql = 'SELECT EXISTS(SELECT * from Users WHERE chat_id = ?)'
-        args = [chat_id]
-        try:
-            self.cursor.execute(sql, args)
-            self.conn.commit()
-            return True if self.cursor.fetchall()[0][0] == 1 else False
-        except sqlite3.IntegrityError:
-            print("ERROR while checking the user")
-            return False
+    # def check_user(self, chat_id):
+    #     sql = 'SELECT EXISTS(SELECT * from Users WHERE chat_id = ?)'
+    #     args = [chat_id]
+    #     try:
+    #         self.cursor.execute(sql, args)
+    #         self.conn.commit()
+    #         return True if self.cursor.fetchall()[0][0] == 1 else False
+    #     except sqlite3.IntegrityError:
+    #         print("ERROR while checking the user")
+    #         return False
 
     """
 
     PAYMENT SECTION
     
     """
-    def authorize_payed_user(self, payment_id, chat_id, status, create_date, end_date):
-        """ Inserts user to the table of paid users
+    # def authorize_payed_user(self, payment_id, chat_id, status, create_date, end_date):
+    #     """ Inserts user to the table of paid users
         
-        To make insertion more reliable
-        you should provide arguments by name
-        .authorizeUser(payment_id = 1, chat_id = 1,day = 1, time = 1, username = "lol", email = "kek")
+    #     To make insertion more reliable
+    #     you should provide arguments by name
+    #     .authorizeUser(payment_id = 1, chat_id = 1,day = 1, time = 1, username = "lol", email = "kek")
         
-        return if insertion was succesfull(True) or not (False)"""
+    #     return if insertion was succesfull(True) or not (False)"""
 
-        sql = 'INSERT INTO Payments (payment_id, chat_id, status, create_date, end_date) VALUES (?,?,?,?,?)'
-        args = [payment_id, chat_id, status, create_date, end_date]
-        try:
-            self.cursor.execute(sql, args)
-            self.conn.commit()
-            return True
-        except sqlite3.IntegrityError:
-            print("User exists")
-            return False
+    #     sql = 'UPDATE Payments SET payment_id = 7, chat_id, status, create_date, end_date) VALUES (?,?,?,?,?)'
+    #     args = [payment_id, chat_id, status, create_date, end_date]
+    #     try:
+    #         self.cursor.execute(sql, args)
+    #         self.conn.commit()
+    #         return True
+    #     except sqlite3.IntegrityError:
+    #         print("User exists")
+    #         return False
 
     def check_payed_user(self, chat_id):
         """ Checks out if provided user in our payments tables
         return boolean answer"""
-        sql = 'SELECT EXISTS(SELECT * from Payments WHERE chat_id = ?)'
+        sql = 'SELECT EXISTS(SELECT * from Payment WHERE chat_id = ? AND status = "subscribed")'
         args = [chat_id]
+        answer = False
         try:
             self.cursor.execute(sql, args)
-            self.conn.commit()
-            return True if self.cursor.fetchall()[0][0] == 1 else False
+            answer = True if self.cursor.fetchall()[0][0] == 1 else False
         except sqlite3.IntegrityError:
             print("ERROR while checking the user")
-            return False
+        finally:
+            self.conn.commit()
+            return answer
+
 
 
     """

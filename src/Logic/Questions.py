@@ -1,10 +1,12 @@
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
+from random import choice
+
 from .user_manager import UM
 from .database import DB
 from .Commands import start
 from .variables import *
-from .etc import text, photos
+from .etc import text, photos, emoji
 
 def check(chat_id, update, context):
     if chat_id not in UM.currentUsers:
@@ -140,7 +142,8 @@ def result(update,context):
         answer = text["no_result"]
     else:
         answer = text["result"]
-    reply_keyboard = reply_keys + [[text["back"],text["menu"]]]
+
+    reply_keyboard = list(map(lambda x: [x[0]+" "+choice(emoji)],reply_keys)) + [[text["back"],text["menu"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text = answer, reply_markup = markup)
     return ANSWER
@@ -160,7 +163,7 @@ def final_answer(update,context):
     UM.currentUsers[chat_id].stage = 5
 
     # print(UM.currentUsers[chat_id].games)
-    game = massage
+    game = massage[:-2]
     if [game] in UM.currentUsers[chat_id].games:
         description = DB.get_game(game)
         print(description)
@@ -169,7 +172,7 @@ def final_answer(update,context):
 
     # if relative pfoto exists -> send it
     if game in photos.keys():
-        update.message.reply_photo(photo=open(f"img/{photos[game]}", 'rb'), caption = game)
+        update.message.reply_photo(photo=open(f"src/Logic/img/{photos[game]}", 'rb'), caption = game)
 
     reply_keyboard = [[text["back"],text["menu"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
