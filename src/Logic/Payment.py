@@ -15,6 +15,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 def subscribe(update, context):
+	global text
 	update = update.callback_query if update.callback_query else update
 	chat_id = update.message.chat.id
 
@@ -49,9 +50,9 @@ def subscribe(update, context):
 	signature = make_signature(private_key, data, private_key)
 
 	URL = f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}"
-	inline_button = InlineKeyboardButton("Подписаться ✅", url=URL)
+	inline_button = InlineKeyboardButton(text["pay"], url=URL)
 	reply_markup = InlineKeyboardMarkup([[inline_button]])
-	text = "Прочтите /terms и перейдите по сгенерированной ссылке, для оформления подписки!"
+	text = text["pay_intro"]
 	context.bot.edit_message_text(
 		chat_id = update.message.chat.id, 
 		message_id = update.message.message_id, 
@@ -65,48 +66,51 @@ def unsubscribe(update, context):
 	chat_id = update.message.chat.id
 	isPayed = DB.check_payed_user(chat_id)
 	if not isPayed:
-		update.message.reply_text(text["not_subscribed"])
+		update.message.reply_text(text = text["not_subscribed"])
 		return start(update, context)
-	button1 = InlineKeyboardButton("Отписаться ‼️", callback_data="unsubscribe_confirm")
-	button2 = InlineKeyboardButton("Не, не, не ❎", callback_data="no_unsubscribe")
+	button1 = InlineKeyboardButton(text["unsubscribe"], callback_data="unsubscribe_confirm")
+	button2 = InlineKeyboardButton(text["do_not_unsubscribe"], callback_data="no_unsubscribe")
 	reply_markup = InlineKeyboardMarkup([[button1],[button2]])
-	text = 'Вы действительно хотите отписать от подписки?'
-	update.message.reply_text(text=text, reply_markup=reply_markup)
+	update.message.reply_text(text=text["ask_to_unsubscribe"], reply_markup=reply_markup)
 	logger.info("User %s: ask Unsubscribe;", update.message.chat.id)
 
 def unsubscribe_confirm(update, context):
-	text = 'Ваша зяавка на отписку отправлена!'
+	global text
 	chat_id = update.callback_query.message.chat.id
 	context.bot.edit_message_text(
 			chat_id = chat_id, 
 			message_id = update.callback_query.message.message_id, 
-			text=text, 
+			text=text["unsubscribe_sent"],
 			)
-	payment_id = DB.get_payment_id(chat_id) #HERE must bu method that return payment nubmer from Payments
-	text = f'Платеж {payment_id}: Пользователь {update.callback_query.message.chat.username} хочет отписаться!'
-	button = InlineKeyboardButton("Выполнено!", callback_data="unsubscribe_done_adm")
+	# return payment nubmer from Payments
+	payment_id = DB.get_payment_id(chat_id)
+	if update.callback_query.message.chat.username:
+		username = update.callback_query.message.chat.username
+	else:
+		username = "Noname"
+	button = InlineKeyboardButton(text["done"], callback_data="unsubscribe_done_adm")
 	reply_markup = InlineKeyboardMarkup([[button]])
 	context.bot.send_message(
 			chat_id = '@otpisatsanado', 
-			text=text, 
+			text=text["unsubscribe_for_admin"]\
+				.format(payment_id = payment_id, username = username), 
 			reply_markup=reply_markup
 			)
 	logger.info("User %s: send Unsubscribe request;", update.callback_query.message.chat.id)
 
 def unsubscribe_done_adm(update, context):
-	payment_id = int(update.callback_query.message.text.split()[1][:-1])
-	# Here must be a function that mask paymetn_id as unsubscribed!!!!
+	payment_id = int(update.callback_query.message.text.split()[1])
+	print(f"payment_id unsubscribed: {payment_id}")
+	# mark paymetn_id as unsubscribed
 	DB.unsubscribe_user(payment_id)
-	text = 'Заявка обработана!'
 	context.bot.edit_message_text(
 			chat_id = update.callback_query.message.chat.id, 
 			message_id = update.callback_query.message.message_id, 
-			text=text, 
+			text=text["unsubscribe_processed"], 
 			)
-	logger.info("Adm 383327735: process app;")
+	logger.info("Admin 383327735: process app;")
 
 def no_unsubscribe(update, context):
-	text = 'Ваша заявка на отписку отправлена!'
 	context.bot.delete_message(
 			chat_id = update.callback_query.message.chat.id, 
 			message_id = update.callback_query.message.message_id, 

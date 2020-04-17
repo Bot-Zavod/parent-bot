@@ -69,12 +69,10 @@ class DbInterface:
         try:
             self.cursor.execute(sql, args)
             cursor = self.cursor.fetchall()[0][0]
-            print(f"DB: {cursor}")
             if cursor == 1:
                 answer = True 
             else:
                 answer = False
-
         except sqlite3.IntegrityError:
             print("ERROR while checking the user")
         finally:
@@ -92,7 +90,7 @@ class DbInterface:
             print(f"Your request get_payment_id {chat_id} failed")
         finally:
             self.conn.commit()
-        return data
+            return data
 
     def unsubscribe_user(self, payment_id):
         sql = "UPDATE Payments SET status = ('unsubscribed') WHERE payment_id = (?)"
@@ -105,7 +103,7 @@ class DbInterface:
             print(f"Your request unsubscribe_user {payment_id} failed")
         finally:
             self.conn.commit()
-        return data
+            return data
 
     """
     
@@ -154,7 +152,7 @@ class DbInterface:
             print(f"Your game {game} does not exist or some other shit happened")
         finally:
             self.conn.commit()
-        return data
+            return data
 
 db_path = os.getcwd() + "/database.db"
 DB = DbInterface(db_path)
