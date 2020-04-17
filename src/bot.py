@@ -10,7 +10,6 @@ from Logic.Questions import ask_location, ask_type, ask_age, ask_props, result, 
 from Logic.variables import *
 
 
-
 def main():
     updater = Updater(environ.get("API_KEY"), use_context=True)
 
@@ -21,8 +20,13 @@ def main():
                         # CommandHandler('admin', admin)]
 
     dispatcher.add_handler(CallbackQueryHandler(subscribe, pattern='^(subscribe)$'))
+    dispatcher.add_handler(CallbackQueryHandler(unsubscribe_confirm, pattern='^(unsubscribe_confirm)$'))
+    dispatcher.add_handler(CallbackQueryHandler(unsubscribe_done_adm, pattern='^(unsubscribe_done_adm)$'))
+    dispatcher.add_handler(CallbackQueryHandler(no_unsubscribe, pattern='^(no_unsubscribe)$'))
     dispatcher.add_handler(CallbackQueryHandler(demo, pattern='^(demo)$'))
     dispatcher.add_handler(CommandHandler('terms', terms))
+    dispatcher.add_handler(CommandHandler('subscribe', subscribe))
+    dispatcher.add_handler(CommandHandler('unsubscribe', unsubscribe))
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
