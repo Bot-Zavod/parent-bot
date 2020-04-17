@@ -50,7 +50,7 @@ class DbInterface:
         
     #     return if insertion was succesfull(True) or not (False)"""
 
-    #     sql = 'UPDATE Payments SET payment_id = 7, chat_id, status, create_date, end_date) VALUES (?,?,?,?,?)'
+    #     sql = 'UPDATE Payments SET (payment_id, chat_id, status, create_date, end_date) VALUES (?,?,?,?,?)'
     #     args = [payment_id, chat_id, status, create_date, end_date]
     #     try:
     #         self.cursor.execute(sql, args)
@@ -63,19 +63,49 @@ class DbInterface:
     def check_payed_user(self, chat_id):
         """ Checks out if provided user in our payments tables
         return boolean answer"""
-        sql = 'SELECT EXISTS(SELECT * from Payment WHERE chat_id = ? AND status = "subscribed")'
+        sql = 'SELECT EXISTS(SELECT * FROM Payments WHERE chat_id = (?) AND status = "subscribed")'
         args = [chat_id]
         answer = False
         try:
             self.cursor.execute(sql, args)
-            answer = True if self.cursor.fetchall()[0][0] == 1 else False
+            cursor = self.cursor.fetchall()[0][0]
+            print(f"DB: {cursor}")
+            if cursor == 1:
+                answer = True 
+            else:
+                answer = False
+
         except sqlite3.IntegrityError:
             print("ERROR while checking the user")
         finally:
             self.conn.commit()
             return answer
 
+    def get_payment_id(self, chat_id):
+        sql = "SELECT payment_id FROM Payments WHERE chat_id = (?)"
+        args = [chat_id]
+        data = None
+        try:
+            self.cursor.execute(sql, args)
+            data = self.cursor.fetchall()[0][0]
+        except:
+            print(f"Your request get_payment_id {chat_id} failed")
+        finally:
+            self.conn.commit()
+        return data
 
+    def unsubscribe_user(self, payment_id):
+        sql = "UPDATE Payments SET status = ('unsubscribed') WHERE payment_id = (?)"
+        args = [payment_id]
+        data = False
+        try:
+            self.cursor.execute(sql, args)
+            data = True
+        except:
+            print(f"Your request unsubscribe_user {payment_id} failed")
+        finally:
+            self.conn.commit()
+        return data
 
     """
     
@@ -93,7 +123,6 @@ class DbInterface:
             print(f"ERROR while inserting {Name}")
         finally:
             self.conn.commit()
-
     
     def get_games(self, Location = None, Age = None, Type = None, Props = None):
         sql = "SELECT Name, Description FROM Games WHERE "
@@ -136,5 +165,5 @@ if __name__ == "__main__":
     # db_path = os.path.join(BASE_DIR, file)
     db_path = os.getcwd() + "/database.db"
     DB = DbInterface(db_path)
-    DB.add_user(383327735, 'alexeymarkovski', 'Alexey', 'Markovski', '380952793306')
+    # DB.add_user(383327735, 'alexeymarkovski', 'Alexey', 'Markovski', '380952793306')
     print(DB.check_payed_user(383327735))

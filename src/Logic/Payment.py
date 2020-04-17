@@ -9,92 +9,108 @@ import hashlib
 from .Commands import start
 from .variables import *
 from .etc import text
+from .database import DB
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def subscribe(update, context):
-    update = update.callback_query if update.callback_query else update
+	update = update.callback_query if update.callback_query else update
+	chat_id = update.message.chat.id
 
-    # Here must be checking status of payment for user. Is it subscribed -> True=> sendMessage('You already have a subscription')
-    # status = unsubscribed or absent -> continue
+	# Here must be checking status of payment for user. Is it subscribed -> True=> sendMessage('You already have a subscription')
+	# status = unsubscribed or absent -> continue
+	isPayed = DB.check_payed_user(chat_id)
+	if isPayed:
+		update.message.reply_text(text["already_subscribed"])
+		return start(update, context)
 
-    public_key = "publick_key"
-    private_key = "private_key"
-    subscribe_date_start = str(datetime.now().date())+" 00:00:00"
-    description = "Subscribe:"+str(update.message.chat.id)+":"+str(update.message.message_id+1)
-    result_url = "www.domen.com"
-    server_url = "www.domen.com"
 
-    params = {"public_key":public_key,
-              "version":"3",
-              "action":"pay",
-              "amount":"0.3",
-              "currency":"UAH",
-              "description":description,
-              "subscribe_date_start":subscribe_date_start,
-              "subscribe_periodicity":"month",
-              "result_url":result_url,
-              "server_url":result_url,
-              "order_id":randint(0,999999)}
+	public_key = "publick_key"
+	private_key = "private_key"
+	subscribe_date_start = str(datetime.now().date())+" 00:00:00"
+	description = "Subscribe:"+str(update.message.chat.id)+":"+str(update.message.message_id+1)
+	result_url = "www.domen.com"
+	server_url = "www.domen.com"
 
-    data = make_data(params)
-    signature = make_signature(private_key, data, private_key)
+	params = {"public_key":public_key,
+	  "version":"3",
+	  "action":"pay",
+	  "amount":"0.3",
+	  "currency":"UAH",
+	  "description":description,
+	  "subscribe_date_start":subscribe_date_start,
+	  "subscribe_periodicity":"month",
+	  "result_url":result_url,
+	  "server_url":result_url,
+	  "order_id":randint(0,999999)}
 
-    URL = f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}"
-    inline_button = InlineKeyboardButton("Подписаться ✅", url=URL)
-    reply_markup = InlineKeyboardMarkup([[inline_button]])
-    text = "Прочтите /terms и перейдите по сгенерированной ссылке, для оформления подписки!"
-    context.bot.edit_message_text(
-        chat_id = update.message.chat.id, 
-        message_id = update.message.message_id, 
-        text=text, 
-        reply_markup=reply_markup
-        )
-    logger.info("User %s: genetare link to subscribe - %s;", update.message.chat.id, URL)
+	data = make_data(params)
+	signature = make_signature(private_key, data, private_key)
+
+	URL = f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}"
+	inline_button = InlineKeyboardButton("Подписаться ✅", url=URL)
+	reply_markup = InlineKeyboardMarkup([[inline_button]])
+	text = "Прочтите /terms и перейдите по сгенерированной ссылке, для оформления подписки!"
+	context.bot.edit_message_text(
+		chat_id = update.message.chat.id, 
+		message_id = update.message.message_id, 
+		text=text, 
+		reply_markup=reply_markup
+		)
+	logger.info("User %s: genetare link to subscribe - %s;", update.message.chat.id, URL)
 
 def unsubscribe(update, context):
-    button1 = InlineKeyboardButton("Отписаться ‼️", callback_data="unsubscribe_confirm")
-    button2 = InlineKeyboardButton("Не, не, не ❎", callback_data="no_unsubscribe")
-    reply_markup = InlineKeyboardMarkup([[button1],[button2]])
-    text = 'Вы действительно хотите отписать от подписки?'
-    update.message.reply_text(text=text, reply_markup=reply_markup)
-    logger.info("User %s: ask Unsubscribe;", update.message.chat.id)
+	global text
+	chat_id = update.message.chat.id
+	isPayed = DB.check_payed_user(chat_id)
+	if not isPayed:
+		update.message.reply_text(text["not_subscribed"])
+		return start(update, context)
+	button1 = InlineKeyboardButton("Отписаться ‼️", callback_data="unsubscribe_confirm")
+	button2 = InlineKeyboardButton("Не, не, не ❎", callback_data="no_unsubscribe")
+	reply_markup = InlineKeyboardMarkup([[button1],[button2]])
+	text = 'Вы действительно хотите отписать от подписки?'
+	update.message.reply_text(text=text, reply_markup=reply_markup)
+	logger.info("User %s: ask Unsubscribe;", update.message.chat.id)
 
 def unsubscribe_confirm(update, context):
 	text = 'Ваша зяавка на отписку отправлена!'
+	chat_id = update.callback_query.message.chat.id
 	context.bot.edit_message_text(
-		chat_id = update.callback_query.message.chat.id, 
-		message_id = update.callback_query.message.message_id, 
-		text=text, 
-		)
-	payment_id = 2452346236 #HERE must bu method that return payment nubmer from Payments
+			chat_id = chat_id, 
+			message_id = update.callback_query.message.message_id, 
+			text=text, 
+			)
+	payment_id = DB.get_payment_id(chat_id) #HERE must bu method that return payment nubmer from Payments
 	text = f'Платеж {payment_id}: Пользователь {update.callback_query.message.chat.username} хочет отписаться!'
 	button = InlineKeyboardButton("Выполнено!", callback_data="unsubscribe_done_adm")
 	reply_markup = InlineKeyboardMarkup([[button]])
 	context.bot.send_message(
-		chat_id = '@otpisatsanado', 
-		text=text, 
-		reply_markup=reply_markup
-		)
+			chat_id = '@otpisatsanado', 
+			text=text, 
+			reply_markup=reply_markup
+			)
 	logger.info("User %s: send Unsubscribe request;", update.callback_query.message.chat.id)
 
 def unsubscribe_done_adm(update, context):
+	payment_id = int(update.callback_query.message.text.split()[1][:-1])
 	# Here must be a function that mask paymetn_id as unsubscribed!!!!
+	DB.unsubscribe_user(payment_id)
 	text = 'Заявка обработана!'
 	context.bot.edit_message_text(
-		chat_id = update.callback_query.message.chat.id, 
-		message_id = update.callback_query.message.message_id, 
-		text=text, 
-		)
+			chat_id = update.callback_query.message.chat.id, 
+			message_id = update.callback_query.message.message_id, 
+			text=text, 
+			)
 	logger.info("Adm 383327735: process app;")
 
 def no_unsubscribe(update, context):
 	text = 'Ваша заявка на отписку отправлена!'
 	context.bot.delete_message(
-		chat_id = update.callback_query.message.chat.id, 
-		message_id = update.callback_query.message.message_id, 
-		)
+			chat_id = update.callback_query.message.chat.id, 
+			message_id = update.callback_query.message.message_id, 
+			)
 	return start(update.callback_query, context)
 
 def make_data(params):

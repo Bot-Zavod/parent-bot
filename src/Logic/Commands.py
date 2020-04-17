@@ -13,16 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 def start(update, context):
+    global text
     chat_id = update.message.chat.id
-
-    # check if user is already in DB, if not add him
-    # if not DB.check_user(chat_id):
-    #     DB.add_user(chat_id)
-    
-    # check if user has payed already
-    isPayed = True #DB.check_payed_user(chat_id)
+    isPayed = DB.check_payed_user(chat_id)
+    print(f"isPayed: {isPayed}")
     if isPayed:
-        global text 
         reply_keyboard = [[text["games"]]]
         reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
         update.message.reply_text("Поиграй со своим малым! Вот игры...", reply_markup = reply_markup)
