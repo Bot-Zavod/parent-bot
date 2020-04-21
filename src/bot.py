@@ -8,6 +8,9 @@ from Logic.Methods import *
 from Logic.Questions import ask_location, ask_type, ask_age, ask_props, result, final_answer, back_answer
 from Logic.variables import *
 
+from dotenv import load_dotenv
+load_dotenv()
+
 print("Succesfull start")
 
 def main():
