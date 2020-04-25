@@ -2,12 +2,11 @@ import sqlite3
 import os
 import time
 
+
 class DbInterface:
     def __init__(self, path):
-        self.conn = sqlite3.connect(path, check_same_thread = False)
+        self.conn = sqlite3.connect(path, check_same_thread=False)
         self.cursor = self.conn.cursor()
-
-
 
     """
     
@@ -24,7 +23,7 @@ class DbInterface:
     #     except sqlite3.IntegrityError:
     #         print("User exists")
     #         return False
-    
+
     # def check_user(self, chat_id):
     #     sql = 'SELECT EXISTS(SELECT * from Users WHERE chat_id = ?)'
     #     args = [chat_id]
@@ -43,11 +42,11 @@ class DbInterface:
     """
     # def authorize_payed_user(self, payment_id, chat_id, status, create_date, end_date):
     #     """ Inserts user to the table of paid users
-        
+
     #     To make insertion more reliable
     #     you should provide arguments by name
     #     .authorizeUser(payment_id = 1, chat_id = 1,day = 1, time = 1, username = "lol", email = "kek")
-        
+
     #     return if insertion was succesfull(True) or not (False)"""
 
     #     sql = 'UPDATE Payments SET (payment_id, chat_id, status, create_date, end_date) VALUES (?,?,?,?,?)'
@@ -72,7 +71,7 @@ class DbInterface:
             cursor = self.cursor.fetchall()[0][0]
             #print('Cursor', cursor)
             if cursor == 1:
-                answer = True 
+                answer = True
             else:
                 answer = False
         except sqlite3.IntegrityError:
@@ -112,6 +111,7 @@ class DbInterface:
     GAMES SECTION
     
     """
+
     def set_game(self, Name, Description, Location, Age, Type, Props):
         """ Inserts game to the database """
         sql = 'INSERT INTO Games (Name, Description, Location, Age, Type, Props) VALUES (?,?,?,?,?,?)'
@@ -123,8 +123,8 @@ class DbInterface:
             print(f"ERROR while inserting {Name}")
         finally:
             self.conn.commit()
-    
-    def get_games(self, Location = None, Age = None, Type = None, Props = None):
+
+    def get_games(self, Location=None, Age=None, Type=None, Props=None):
         sql = "SELECT Name, Description FROM Games WHERE "
         sql += f'Location LIKE \'%{Location}%\''
         if Age is not None:
@@ -135,7 +135,7 @@ class DbInterface:
             sql += f'AND (Props LIKE \'%{Props}%\')'
         data = False
         try:
-            self.cursor.execute(sql)#, args)
+            self.cursor.execute(sql)  # , args)
             data = self.cursor.fetchall()
         except:
             print(f"Your request {Location, Age, Type, Props} failed")
@@ -151,12 +151,15 @@ class DbInterface:
             self.cursor.execute(sql, args)
             data = self.cursor.fetchall()[0][0]
         except:
-            print(f"Your game {game} does not exist or some other shit happened")
+            print(
+                f"Your game {game} does not exist or some other shit happened")
         finally:
             self.conn.commit()
             return data
 
-db_path = "/var/www/parent-bot/database.db"
+
+# db_path = "/var/www/parent-bot/database.db"
+db_path = "/home/vargan/Dropbox/Programming_projects/Chatbots/parent-bot/database.db"
 DB = DbInterface(db_path)
 
 if __name__ == "__main__":
