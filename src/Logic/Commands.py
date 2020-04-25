@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 def start(update, context):
-    global text
     chat_id = update.message.chat.id
     isPayed = DB.check_payed_user(chat_id)
     # print(f"isPayed: {isPayed}")

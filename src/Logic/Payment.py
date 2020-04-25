@@ -10,12 +10,15 @@ from .Commands import start
 from .variables import *
 from .etc import text
 from .database import DB
+from urllib.parse import urlencode
+from urllib.request import urlopen
+import contextlib
+
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def subscribe(update, context):
-	global text
 	update = update.callback_query if update.callback_query else update
 	chat_id = update.message.chat.id
 
@@ -27,42 +30,40 @@ def subscribe(update, context):
 		return start(update, context)
 
 
-	public_key = "publick_key"
-	private_key = "private_key"
+	public_key = environ["PUBLIC_KEY"]
+	private_key = environ["PRIVAT_KEY"]
 	subscribe_date_start = str(datetime.now().date())+" 00:00:00"
 	description = "Subscribe:"+str(update.message.chat.id)+":"+str(update.message.message_id+1)
-	result_url = "www.domen.com"
-	server_url = "www.domen.com"
+	result_url = "https://t.me/superparent_bot"
+	server_url = environ["SERVER"]
 
 	params = {"public_key":public_key,
 	  "version":"3",
-	  "action":"pay",
+	  "action":"subscribe",
 	  "amount":"0.3",
 	  "currency":"UAH",
 	  "description":description,
 	  "subscribe_date_start":subscribe_date_start,
-	  "subscribe_periodicity":"month",
+	  "subscribe_periodicity":"year",
 	  "result_url":result_url,
-	  "server_url":result_url,
+	  "server_url":server_url,
 	  "order_id":randint(0,999999)}
 
 	data = make_data(params)
 	signature = make_signature(private_key, data, private_key)
 
-	URL = f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}"
+	URL = make_tiny(f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}")
 	inline_button = InlineKeyboardButton(text["pay"], url=URL)
 	reply_markup = InlineKeyboardMarkup([[inline_button]])
-	text = text["pay_intro"]
 	context.bot.edit_message_text(
 		chat_id = update.message.chat.id, 
 		message_id = update.message.message_id, 
-		text=text, 
+		text=text["pay_intro"], 
 		reply_markup=reply_markup
 		)
 	logger.info("User %s: genetare link to subscribe - %s;", update.message.chat.id, URL)
 
 def unsubscribe(update, context):
-	global text
 	chat_id = update.message.chat.id
 	isPayed = DB.check_payed_user(chat_id)
 	if not isPayed:
@@ -75,7 +76,6 @@ def unsubscribe(update, context):
 	logger.info("User %s: ask Unsubscribe;", update.message.chat.id)
 
 def unsubscribe_confirm(update, context):
-	global text
 	chat_id = update.callback_query.message.chat.id
 	context.bot.edit_message_text(
 			chat_id = chat_id, 
@@ -91,7 +91,7 @@ def unsubscribe_confirm(update, context):
 	button = InlineKeyboardButton(text["done"], callback_data="unsubscribe_done_adm")
 	reply_markup = InlineKeyboardMarkup([[button]])
 	context.bot.send_message(
-			chat_id = '@otpisatsanado', 
+			chat_id = environ["NOTIFY"], 
 			text=text["unsubscribe_for_admin"]\
 				.format(payment_id = payment_id, username = username), 
 			reply_markup=reply_markup
@@ -108,7 +108,7 @@ def unsubscribe_done_adm(update, context):
 			message_id = update.callback_query.message.message_id, 
 			text=text["unsubscribe_processed"], 
 			)
-	logger.info("Admin 383327735: process app;")
+	logger.info("Admin: process app;")
 
 def no_unsubscribe(update, context):
 	context.bot.delete_message(
@@ -127,3 +127,8 @@ def make_signature(*args):
 	sha = hashlib.sha1(joined_fields.encode('utf-8')).digest()
 	res = base64.b64encode(sha).decode('utf-8')
 	return res
+
+def make_tiny(url):
+    request_url = ('http://tinyurl.com/api-create.php?' + urlencode({'url':url}))
+    with contextlib.closing(urlopen(request_url)) as response:
+        return response.read().decode('utf-8 ')

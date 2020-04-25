@@ -172,9 +172,9 @@ def final_answer(update,context):
 
     # if relative pfoto exists -> send it
     if game in photos.keys():
-        update.message.reply_photo(photo=open(f"src/Logic/img/{photos[game]}", 'rb'), caption = game)
+        update.message.reply_photo(photo=open(f"/var/www/parent-bot/src/Logic/img/{photos[game]}", 'rb'), caption = game)
 
-    reply_keyboard = [[text["back"],text["menu"]]]
+    reply_keyboard = [text["menu"]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text = description, reply_markup = markup)
     return BACK_ANSWER

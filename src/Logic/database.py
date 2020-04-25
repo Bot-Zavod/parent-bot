@@ -1,6 +1,6 @@
 import sqlite3
 import os
-
+import time
 
 class DbInterface:
     def __init__(self, path):
@@ -63,12 +63,14 @@ class DbInterface:
     def check_payed_user(self, chat_id):
         """ Checks out if provided user in our payments tables
         return boolean answer"""
-        sql = 'SELECT EXISTS(SELECT * FROM Payments WHERE chat_id = (?) AND status = "subscribed")'
-        args = [chat_id]
+        sql = "SELECT EXISTS(SELECT * FROM Payments WHERE chat_id = (?) AND (?) <= end_date)"
+        args = [chat_id, int(time.time())]
         answer = False
+        print(int(time.time()))
         try:
             self.cursor.execute(sql, args)
             cursor = self.cursor.fetchall()[0][0]
+            #print('Cursor', cursor)
             if cursor == 1:
                 answer = True 
             else:
@@ -154,7 +156,7 @@ class DbInterface:
             self.conn.commit()
             return data
 
-db_path = os.getcwd() + "/database.db"
+db_path = "/var/www/parent-bot/database.db"
 DB = DbInterface(db_path)
 
 if __name__ == "__main__":
