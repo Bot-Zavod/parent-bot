@@ -15,120 +15,141 @@ from urllib.request import urlopen
 import contextlib
 
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def subscribe(update, context):
-	update = update.callback_query if update.callback_query else update
-	chat_id = update.message.chat.id
+    update = update.callback_query if update.callback_query else update
+    chat_id = update.message.chat.id
 
-	# Here must be checking status of payment for user. Is it subscribed -> True=> sendMessage('You already have a subscription')
-	# status = unsubscribed or absent -> continue
-	isPayed = DB.check_payed_user(chat_id)
-	if isPayed:
-		update.message.reply_text(text["already_subscribed"])
-		return start(update, context)
+    # Here must be checking status of payment for user. Is it subscribed -> True=> sendMessage('You already have a subscription')
+    # status = unsubscribed or absent -> continue
+    isPayed = DB.check_payed_user(chat_id)
+    if isPayed:
+        update.message.reply_text(text["already_subscribed"])
+        return start(update, context)
 
+    public_key = environ["PUBLIC_KEY"]
+    private_key = environ["PRIVAT_KEY"]
+    subscribe_date_start = str(datetime.now().date())+" 00:00:00"
+    description = "Subscribe:" + \
+        str(update.message.chat.id)+":"+str(update.message.message_id+1)
+    result_url = "https://t.me/superparent_bot"
+    server_url = environ["SERVER"]
 
-	public_key = environ["PUBLIC_KEY"]
-	private_key = environ["PRIVAT_KEY"]
-	subscribe_date_start = str(datetime.now().date())+" 00:00:00"
-	description = "Subscribe:"+str(update.message.chat.id)+":"+str(update.message.message_id+1)
-	result_url = "https://t.me/superparent_bot"
-	server_url = environ["SERVER"]
+    params = {"public_key": public_key,
+              "version": "3",
+              "action": "subscribe",
+              "amount": "0.3",
+              "currency": "UAH",
+              "description": description,
+              "subscribe_date_start": subscribe_date_start,
+              "subscribe_periodicity": "year",
+              "result_url": result_url,
+              "server_url": server_url,
+              "order_id": randint(0, 999999)}
 
-	params = {"public_key":public_key,
-	  "version":"3",
-	  "action":"subscribe",
-	  "amount":"0.3",
-	  "currency":"UAH",
-	  "description":description,
-	  "subscribe_date_start":subscribe_date_start,
-	  "subscribe_periodicity":"year",
-	  "result_url":result_url,
-	  "server_url":server_url,
-	  "order_id":randint(0,999999)}
+    data = make_data(params)
+    signature = make_signature(private_key, data, private_key)
 
-	data = make_data(params)
-	signature = make_signature(private_key, data, private_key)
+    URL = make_tiny(
+        f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}")
+    inline_button = InlineKeyboardButton(text["pay"], url=URL)
+    reply_markup = InlineKeyboardMarkup([[inline_button]])
+    context.bot.delete_message(
+        chat_id=update.message.chat.id,
+        message_id=update.message.message_id,
+    )
+    context.bot.send_message(
+        chat_id=update.message.chat.id,
+        # message_id=update.message.message_id,
+        text=text["pay_intro"],
+        reply_markup=reply_markup
+    )
+    logger.info("User %s: genetare link to subscribe - %s;",
+                update.message.chat.id, URL)
 
-	URL = make_tiny(f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}")
-	inline_button = InlineKeyboardButton(text["pay"], url=URL)
-	reply_markup = InlineKeyboardMarkup([[inline_button]])
-	context.bot.edit_message_text(
-		chat_id = update.message.chat.id, 
-		message_id = update.message.message_id, 
-		text=text["pay_intro"], 
-		reply_markup=reply_markup
-		)
-	logger.info("User %s: genetare link to subscribe - %s;", update.message.chat.id, URL)
 
 def unsubscribe(update, context):
-	chat_id = update.message.chat.id
-	isPayed = DB.check_payed_user(chat_id)
-	if not isPayed:
-		update.message.reply_text(text = text["not_subscribed"])
-		return start(update, context)
-	button1 = InlineKeyboardButton(text["unsubscribe"], callback_data="unsubscribe_confirm")
-	button2 = InlineKeyboardButton(text["do_not_unsubscribe"], callback_data="no_unsubscribe")
-	reply_markup = InlineKeyboardMarkup([[button1],[button2]])
-	update.message.reply_text(text=text["ask_to_unsubscribe"], reply_markup=reply_markup)
-	logger.info("User %s: ask Unsubscribe;", update.message.chat.id)
+    chat_id = update.message.chat.id
+    isPayed = DB.check_payed_user(chat_id)
+    if not isPayed:
+        update.message.reply_text(text=text["not_subscribed"])
+        return start(update, context)
+    button1 = InlineKeyboardButton(
+        text["unsubscribe"], callback_data="unsubscribe_confirm")
+    button2 = InlineKeyboardButton(
+        text["do_not_unsubscribe"], callback_data="no_unsubscribe")
+    reply_markup = InlineKeyboardMarkup([[button1], [button2]])
+    update.message.reply_text(
+        text=text["ask_to_unsubscribe"], reply_markup=reply_markup)
+    logger.info("User %s: ask Unsubscribe;", update.message.chat.id)
+
 
 def unsubscribe_confirm(update, context):
-	chat_id = update.callback_query.message.chat.id
-	context.bot.edit_message_text(
-			chat_id = chat_id, 
-			message_id = update.callback_query.message.message_id, 
-			text=text["unsubscribe_sent"],
-			)
-	# return payment nubmer from Payments
-	payment_id = DB.get_payment_id(chat_id)
-	if update.callback_query.message.chat.username:
-		username = update.callback_query.message.chat.username
-	else:
-		username = "Noname"
-	button = InlineKeyboardButton(text["done"], callback_data="unsubscribe_done_adm")
-	reply_markup = InlineKeyboardMarkup([[button]])
-	context.bot.send_message(
-			chat_id = environ["NOTIFY"], 
-			text=text["unsubscribe_for_admin"]\
-				.format(payment_id = payment_id, username = username), 
-			reply_markup=reply_markup
-			)
-	logger.info("User %s: send Unsubscribe request;", update.callback_query.message.chat.id)
+    chat_id = update.callback_query.message.chat.id
+    context.bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=update.callback_query.message.message_id,
+        text=text["unsubscribe_sent"],
+    )
+    # return payment nubmer from Payments
+    payment_id = DB.get_payment_id(chat_id)
+    if update.callback_query.message.chat.username:
+        username = update.callback_query.message.chat.username
+    else:
+        username = "Noname"
+    button = InlineKeyboardButton(
+        text["done"], callback_data="unsubscribe_done_adm")
+    reply_markup = InlineKeyboardMarkup([[button]])
+    context.bot.send_message(
+        chat_id=environ["NOTIFY"],
+        text=text["unsubscribe_for_admin"]
+        .format(payment_id=payment_id, username=username),
+        reply_markup=reply_markup
+    )
+    logger.info("User %s: send Unsubscribe request;",
+                update.callback_query.message.chat.id)
+
 
 def unsubscribe_done_adm(update, context):
-	payment_id = int(update.callback_query.message.text.split()[1])
-	print(f"payment_id unsubscribed: {payment_id}")
-	# mark paymetn_id as unsubscribed
-	DB.unsubscribe_user(payment_id)
-	context.bot.edit_message_text(
-			chat_id = update.callback_query.message.chat.id, 
-			message_id = update.callback_query.message.message_id, 
-			text=text["unsubscribe_processed"], 
-			)
-	logger.info("Admin: process app;")
+    payment_id = int(update.callback_query.message.text.split()[1])
+    print(f"payment_id unsubscribed: {payment_id}")
+    # mark paymetn_id as unsubscribed
+    DB.unsubscribe_user(payment_id)
+    context.bot.edit_message_text(
+        chat_id=update.callback_query.message.chat.id,
+        message_id=update.callback_query.message.message_id,
+        text=text["unsubscribe_processed"],
+    )
+    logger.info("Admin: process app;")
+
 
 def no_unsubscribe(update, context):
-	context.bot.delete_message(
-			chat_id = update.callback_query.message.chat.id, 
-			message_id = update.callback_query.message.message_id, 
-			)
-	return start(update.callback_query, context)
+    context.bot.delete_message(
+        chat_id=update.callback_query.message.chat.id,
+        message_id=update.callback_query.message.message_id,
+    )
+    return start(update.callback_query, context)
+
 
 def make_data(params):
-	json_data = json.dumps(params).encode('utf-8')
-	data = base64.b64encode(json_data).decode('utf-8')
-	return data
+    json_data = json.dumps(params).encode('utf-8')
+    data = base64.b64encode(json_data).decode('utf-8')
+    return data
+
 
 def make_signature(*args):
-	joined_fields = ''.join(x  for x in args)
-	sha = hashlib.sha1(joined_fields.encode('utf-8')).digest()
-	res = base64.b64encode(sha).decode('utf-8')
-	return res
+    joined_fields = ''.join(x for x in args)
+    sha = hashlib.sha1(joined_fields.encode('utf-8')).digest()
+    res = base64.b64encode(sha).decode('utf-8')
+    return res
+
 
 def make_tiny(url):
-    request_url = ('http://tinyurl.com/api-create.php?' + urlencode({'url':url}))
+    request_url = ('http://tinyurl.com/api-create.php?' +
+                   urlencode({'url': url}))
     with contextlib.closing(urlopen(request_url)) as response:
         return response.read().decode('utf-8 ')

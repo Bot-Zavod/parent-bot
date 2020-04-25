@@ -41,13 +41,10 @@ def demo(update, context):
     subscribe_button = InlineKeyboardButton(
         text["subscribe"], callback_data="subscribe")
     reply_markup = InlineKeyboardMarkup([[subscribe_button]])
-    # context.bot.edit_message_media(
-    #     chat_id=update.callback_query.message.chat.id,
-    #     message_id=update.callback_query.message.message_id,
-    #     # text=text['demo'],
-    #     media=open("/img/demo.mp4", "rb"),
-    #     reply_markup=reply_markup
-    # )
+    context.bot.delete_message(
+        chat_id=update.callback_query.message.chat.id,
+        message_id=update.callback_query.message.message_id,
+    )
     context.bot.send_video(
         chat_id=update.callback_query.message.chat.id,
         video=open("src/Logic/img/demo.mp4", "rb"),
