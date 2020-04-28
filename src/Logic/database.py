@@ -158,8 +158,8 @@ class DbInterface:
             return data
 
 
-db_path = "/var/www/parent-bot/database.db"
-# db_path = "nt-bot/database.db"
+# db_path = "/var/www/parent-bot/database.db"
+db_path = "/parent-bot/database.db"
 DB = DbInterface(db_path)
 
 if __name__ == "__main__":

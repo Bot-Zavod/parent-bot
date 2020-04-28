@@ -55,6 +55,8 @@ def ask_type(update, context):
                       [text["back"]]]
     if massage == text["outside"]:
         reply_keyboard = reply_keyboard[:3] + [reply_keyboard[-1]]
+    elif massage == text["trip"]:
+        ask_age(update, context)
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["ask_type"], reply_markup=markup)
     return ASK_AGE
