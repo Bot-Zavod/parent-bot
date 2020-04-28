@@ -47,7 +47,7 @@ def demo(update, context):
     )
     context.bot.send_video(
         chat_id=update.callback_query.message.chat.id,
-        video=open("src/Logic/img/demo.mp4", "rb"),
+        video=open("/var/www/parent-bot/src/Logic/img/demo.mp4", "rb"),
         caption = text["demo"],
         reply_markup=reply_markup
 
