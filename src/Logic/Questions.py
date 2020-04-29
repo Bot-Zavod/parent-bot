@@ -1,6 +1,8 @@
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import ParseMode
 
 from random import choice
+import os
 
 from .user_manager import UM
 from .database import DB
@@ -120,7 +122,7 @@ def ask_props(update, context):
 def result(update, context):
     massage = update.message.text
     chat_id = update.message.chat.id
-    check(chat_id, update, context)
+    # check(chat_id, update, context)
 
     if massage in (text["yes"], text["no"]):
         UM.currentUsers[chat_id].add_props(massage, 4)
@@ -160,41 +162,40 @@ def result(update, context):
 def final_answer(update, context):
     massage = update.message.text
     chat_id = update.message.chat.id
-    check(chat_id, update, context)
+    # check(chat_id, update, context)
 
-    if massage == text["back"] and \
-            UM.currentUsers[chat_id].stage == 4:
-
-        return result(update, context)
-    elif massage == text["menu"]:
+    if massage == text["menu"]:
         UM.delete_user(chat_id)
         return start(update, context)
     UM.currentUsers[chat_id].stage = 5
 
     # print(UM.currentUsers[chat_id].games)
-    game = massage[:-2]
+    game = massage[:-2].strip()
     if [game] in UM.currentUsers[chat_id].games:
         description = DB.get_game(game)
-        print(description)
+        # print(description)
     else:
+        print(f"\n{game}\n")
         return result(update, context)
 
-    # if relative pfoto exists -> send it
     if game in photos.keys():
-        update.message.reply_photo(photo=open(
-            f"/var/www/parent-bot/src/Logic/img/{photos[game]}", 'rb'), caption=game)
+        path = f"src/Logic/img/{photos[game]}"
+        full_path = os.path.abspath(os.path.expanduser(
+            os.path.expandvars(path)))
+        update.message.reply_photo(photo=open(full_path, 'rb'), caption=game)
 
     reply_keyboard = [[text["back"], text["menu"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(text=description, reply_markup=markup)
+    update.message.reply_text(
+        text=description.replace("<br>", "\n"),
+        reply_markup=markup,
+        parse_mode=ParseMode.HTML)
     return BACK_ANSWER
 
 
 def back_answer(update, context):
     massage = update.message.text
     chat_id = update.message.chat.id
-    check(chat_id, update, context)
-
     if massage == text["back"]:
         return result(update, context)
     elif massage == text["menu"]:

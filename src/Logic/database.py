@@ -124,15 +124,15 @@ class DbInterface:
         finally:
             self.conn.commit()
 
-    def get_games(self, Location=None, Age=None, Type=None, Props=None):
+    def get_games(self, Location=None, Type=None,  Age=None, Props=None):
         sql = "SELECT Name, Description FROM Games WHERE "
-        sql += f'Location LIKE \'%{Location}%\''
+        sql += f'(Location LIKE \'%{Location}%\' OR Location="")'
         if Age is not None:
-            sql += f'AND (Age LIKE \'%{Age}%\') '
+            sql += f'AND (Age LIKE \'%{Age}%\' OR Age="")'
         if Type is not None:
-            sql += f'AND (Type LIKE \'%{Type}%\')'
+            sql += f'AND (Type LIKE \'%{Type}%\' OR Type="")'
         if Props is not None:
-            sql += f'AND (Props LIKE \'%{Props}%\')'
+            sql += f'AND (Props LIKE \'%{Props}%\' OR Props="")'
         data = False
         try:
             self.cursor.execute(sql)  # , args)
@@ -158,8 +158,10 @@ class DbInterface:
             return data
 
 
-db_path = "/var/www/parent-bot/database.db"
-DB = DbInterface(db_path)
+path = "database.db"
+full_path = os.path.abspath(os.path.expanduser(
+    os.path.expandvars(path)))
+DB = DbInterface(full_path)
 
 if __name__ == "__main__":
     # file = "database.db"

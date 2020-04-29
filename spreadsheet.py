@@ -18,13 +18,16 @@ sheet.col_values(16)
 sheet.cell(1, 1).value
 """
 
+
 def spreadsheet():
     scope = ['https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name('Pandemia parser-751d2a06ae54.json', scope)
+             'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name(
+        'Pandemia parser-751d2a06ae54.json', scope)
     client = gspread.authorize(creds)
     sheet = client.open('Контент').get_worksheet(0)
     return sheet
+
 
 def data_filler(sheet):
     # pp = pprint.PrettyPrinter()
@@ -32,8 +35,9 @@ def data_filler(sheet):
     for game in games:
         game = [game[-1].strip()] + game[:5]
         DB.set_game(*game)
-    
+
     print("\n\nUPDATE was finished succesfully\n\n")
+
 
 if __name__ == "__main__":
     sheet = spreadsheet()

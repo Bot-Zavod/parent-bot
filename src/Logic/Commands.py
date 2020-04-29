@@ -1,6 +1,7 @@
 from telegram import ReplyKeyboardRemove, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ConversationHandler
 from os import getcwd
+import os
 import logging
 
 from .database import DB
@@ -45,10 +46,13 @@ def demo(update, context):
         chat_id=update.callback_query.message.chat.id,
         message_id=update.callback_query.message.message_id,
     )
+    path = f"src/Logic/img/demo.mp4"
+    full_path = os.path.abspath(os.path.expanduser(
+        os.path.expandvars(path)))
     context.bot.send_video(
         chat_id=update.callback_query.message.chat.id,
-        video=open("/var/www/parent-bot/src/Logic/img/demo.mp4", "rb"),
-        caption = text["demo"],
+        video=open(full_path, "rb"),
+        caption=text["demo"],
         reply_markup=reply_markup
 
     )
