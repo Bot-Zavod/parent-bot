@@ -24,7 +24,7 @@ def main():
 
     dispatcher.add_handler(CallbackQueryHandler(subscribe, pattern='^(subscribe)$'))
     dispatcher.add_handler(CallbackQueryHandler(unsubscribe_confirm, pattern='^(unsubscribe_confirm)$'))
-    dispatcher.add_handler(CallbackQueryHandler(unsubscribe_done_adm, pattern='^(unsubscribe_done_adm)$'))
+    dispatcher.add_handler(CallbackQueryHandler(subprocessing, pattern='^(month|year)$'))
     dispatcher.add_handler(CallbackQueryHandler(no_unsubscribe, pattern='^(no_unsubscribe)$'))
     dispatcher.add_handler(CallbackQueryHandler(demo, pattern='^(demo)$'))
     dispatcher.add_handler(CommandHandler('info', terms))

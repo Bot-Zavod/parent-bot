@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def start(update, context):
     chat_id = update.message.chat.id
     isPayed = DB.check_payed_user(chat_id)
-    # print(f"isPayed: {isPayed}")
+#    print(f"isPayed: {isPayed}")
     if isPayed:
         reply_keyboard = [[text["games"]]]
         reply_markup = ReplyKeyboardMarkup(

@@ -1,0 +1,10 @@
+2020-05-04 13:16:29,991 - Logic.Commands - INFO - User 275157861: send /start command;
+2020-05-04 13:16:30,262 - Logic.Commands - INFO - User 275157861: send /start command;
+2020-05-04 13:16:30,390 - Logic.Commands - INFO - User 275157861: send /start command;
+2020-05-04 13:16:30,519 - Logic.Commands - INFO - User 275157861: send /start command;
+2020-05-04 13:51:01,699 - Logic.Payment - INFO - User 275157861: ask to subscribe
+2020-05-04 13:51:06,353 - Logic.Payment - INFO - User 275157861: (term: month)genetare link to subscribe - http://tinyurl.com/yb53modz;
+2020-05-04 13:52:34,535 - Logic.Payment - INFO - User 275157861: ask Unsubscribe;
+2020-05-04 13:52:36,614 - Logic.Payment - INFO - User 275157861: confirm Unsubscribe;
+2020-05-04 13:52:37,086 - Logic.Payment - INFO - User 275157861: {'result': 'ok', 'payment_id': 1311157935, 'action': 'subscribe', 'status': 'unsubscribed', 'version': 3, 'type': 'buy', 'paytype': 'privat24', 'public_key': 'i67060062494', 'acq_id': 414963, 'order_id': '400894', 'liqpay_order_id': 'HINPNAXI1588600295587462', 'description': 'Subscribe:275157861:4062', 'sender_phone': '380506522795', 'sender_first_name': 'Наталья', 'sender_last_name': 'Ткаченко', 'sender_card_mask2': '516875*20', 'sender_card_bank': 'pb', 'sender_card_type': 'mc', 'sender_card_country': 804, 'amount': 0.3, 'currency': 'UAH', 'sender_commission': 0.0, 'receiver_commission': 0.01, 'agent_commission': 0.0, 'amount_debit': 0.3, 'amount_credit': 0.3, 'commission_debit': 0.0, 'commission_credit': 0.01, 'currency_debit': 'UAH', 'currency_credit': 'UAH', 'sender_bonus': 0.0, 'amount_bonus': 0.0, 'mpi_eci': '7', 'is_3ds': False, 'language': 'uk', 'create_date': 1588600295590, 'end_date': 1588600357028, 'transaction_id': 1311157935}
+2020-05-04 15:52:33,456 - Logic.Commands - INFO - User 384341805: send /start command;

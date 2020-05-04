@@ -65,11 +65,12 @@ class DbInterface:
         sql = "SELECT EXISTS(SELECT * FROM Payments WHERE chat_id = (?) AND (?) <= end_date)"
         args = [chat_id, int(time.time())]
         answer = False
-        print(int(time.time()))
+        #print(int(time.time()))
         try:
             self.cursor.execute(sql, args)
             cursor = self.cursor.fetchall()[0][0]
-            #print('Cursor', cursor)
+           # print('Cursor')
+           # print(cursor)
             if cursor == 1:
                 answer = True
             else:
@@ -79,6 +80,29 @@ class DbInterface:
         finally:
             self.conn.commit()
             return answer
+
+    def is_subscribed(self, chat_id):
+        """ Checks out if provided user in our payments tables
+        return boolean answer"""
+        sql = "SELECT EXISTS(SELECT * FROM Payments WHERE chat_id = (?) AND status = 'subscribed')"
+        args = [chat_id]
+        answer = False
+        #print(int(time.time()))
+        try:
+            self.cursor.execute(sql, args)
+            cursor = self.cursor.fetchall()[0][0]
+           # print('Cursor')
+           # print(cursor)
+            if cursor == 1:
+                answer = True
+            else:
+                answer = False
+        except sqlite3.IntegrityError:
+            print("ERROR while checking the user")
+        finally:
+            self.conn.commit()
+            return answer
+
 
     def get_payment_id(self, chat_id):
         sql = "SELECT payment_id FROM Payments WHERE chat_id = (?)"
@@ -92,6 +116,33 @@ class DbInterface:
         finally:
             self.conn.commit()
             return data
+
+
+    def set_status(self, chat_id, status):
+        sql = "UPDATE Payments SET status = (?) WHERE chat_id = (?)"
+        args = [status, chat_id]
+        data = None
+        try:
+            self.cursor.execute(sql, args)
+            data = self.cursor.fetchall()[0][0]
+        except:
+            print(f"Updating status = {status} to {chat_id} failed")
+        finally:
+            self.conn.commit()
+            return data
+
+    def get_order_id(self, chat_id):
+        sql = "SELECT order_id FROM Payments WHERE chat_id = (?)"
+        args = [chat_id]
+        data = None
+        try:
+            self.cursor.execute(sql, args)
+            data = self.cursor.fetchall()[0][0]
+        except:
+            print(f"Your request get_order_id {chat_id} failed")
+        finally:
+            self.conn.commit()
+            return data 
 
     def unsubscribe_user(self, payment_id):
         sql = "UPDATE Payments SET status = ('unsubscribed') WHERE payment_id = (?)"
@@ -158,7 +209,10 @@ class DbInterface:
             return data
 
 
-path = "database.db"
+
+path = "../database.db"
+
+db_path = os.getcwd() + "/database.db"
 full_path = os.path.abspath(os.path.expanduser(
     os.path.expandvars(path)))
 DB = DbInterface(full_path)

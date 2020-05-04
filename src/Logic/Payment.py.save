@@ -26,24 +26,10 @@ def subscribe(update, context):
 
     # Here must be checking status of payment for user. Is it subscribed -> True=> sendMessage('You already have a subscription')
     # status = unsubscribed or absent -> continue
-    isPayed = DB.is_subscribed(chat_id)
+    isPayed = DB.check_payed_user(chat_id)
     if isPayed:
         update.message.reply_text(text["already_subscribed"])
         return start(update, context)
-    month = InlineKeyboardButton(text='Месяц', callback_data="month")
-    year = InlineKeyboardButton(text='Год', callback_data="year") 
-    reply_markup = InlineKeyboardMarkup([[month], [year]])
-    context.bot.send_message(
-        chat_id=update.message.chat.id,
-        text="Выберите срок подписки",
-        reply_markup=reply_markup
-    )
-    logger.info("User %s: ask to subscribe", update.message.chat.id)
-
-def subprocessing(update, context):
-    update = update.callback_query if update.callback_query else update
-    chat_id = update.message.chat.id
-    term = update.data
 
     public_key = environ["PUBLIC_KEY"]
     private_key = environ["PRIVAT_KEY"]
@@ -60,7 +46,7 @@ def subprocessing(update, context):
               "currency": "UAH",
               "description": description,
               "subscribe_date_start": subscribe_date_start,
-              "subscribe_periodicity": term,
+              "subscribe_periodicity": "year",
               "result_url": result_url,
               "server_url": server_url,
               "order_id": randint(0, 999999)}
@@ -82,13 +68,13 @@ def subprocessing(update, context):
         text=text["pay_intro"],
         reply_markup=reply_markup
     )
-    logger.info("User %s: (term: %s)genetare link to subscribe - %s;",
-                update.message.chat.id, term, URL)
+    logger.info("User %s: genetare link to subscribe - %s;",
+                update.message.chat.id, URL)
 
 
 def unsubscribe(update, context):
     chat_id = update.message.chat.id
-    isPayed = DB.is_subscribed(chat_id)
+    isPayed = DB.check_payed_user(chat_id)
     if not isPayed:
         update.message.reply_text(text=text["not_subscribed"])
         return start(update, context)
@@ -133,10 +119,10 @@ def unsubscribe_request(update, context):
     logger.info("User %s: %s", chat_id, res)
     if res['result'] == 'ok':
 	#HERE must be method that change status on unsubscribe
-        status_res = DB.set_status('unsubscribe', chat_id)
+        update_status = set_status('unsubscribe', chat_id)
         context.bot.edit_message_text(chat_id=chat_id, message_id=update.message.message_id, text=text["done"])
     else:
-        logger.info(f"User {chat_id}: unsubscribe with status = {res['result']}")
+        print(res)
 
 
 #def unsubscribe_done_adm(update, context):
