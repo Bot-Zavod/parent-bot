@@ -1,6 +1,8 @@
 import sqlite3
 import os
+from os import path, getcwd
 import time
+from pprint import pprint
 
 
 class DbInterface:
@@ -8,60 +10,48 @@ class DbInterface:
         self.conn = sqlite3.connect(path, check_same_thread=False)
         self.cursor = self.conn.cursor()
 
-    """
-    
-    USER SECTION
-    
-    """
-    # def add_user(self, chat_id):
-    #     sql = 'INSERT INTO Users (chat_id, username, first_name, last_name, email, phone) VALUES (?,?,?,?,?,?)'
-    #     args = [chat_id]
-    #     try:
-    #         self.cursor.execute(sql, args)
-    #         self.conn.commit()
-    #         return True
-    #     except sqlite3.IntegrityError:
-    #         print("User exists")
-    #         return False
+        sql_tables = [
+            # Games table    
+            """
+            CREATE TABLE IF NOT EXISTS "Games" (
+            "Name"	TEXT,
+            "Description"	TEXT,
+            "Location"	TEXT,
+            "Age"	TEXT,
+            "Type"	TEXT,
+            "Props"	TEXT)
+            """,
 
-    # def check_user(self, chat_id):
-    #     sql = 'SELECT EXISTS(SELECT * from Users WHERE chat_id = ?)'
-    #     args = [chat_id]
-    #     try:
-    #         self.cursor.execute(sql, args)
-    #         self.conn.commit()
-    #         return True if self.cursor.fetchall()[0][0] == 1 else False
-    #     except sqlite3.IntegrityError:
-    #         print("ERROR while checking the user")
-    #         return False
+            # Payed_Users table
+            """
+            CREATE TABLE IF NOT EXISTS "Payments" (
+            "payment_id"	INTEGER NOT NULL UNIQUE,
+            "chat_id"	INTEGER,
+            "status"	VARCHAR(50) DEFAULT NULL,
+            "create_date"	DATETIME,
+            "end_date"	DATETIME,
+            "order_id"	varchar(50),
+            PRIMARY KEY("payment_id"))
+            """,
+
+            # Users table 
+            """
+            CREATE TABLE IF NOT EXISTS "Users" (
+            "chat_id"	INTEGER)
+            """
+        ]
+
+        for sql in sql_tables:
+            self.cursor.execute(sql)
+            self.conn.commit()
 
     """
-
+    ===============
     PAYMENT SECTION
-    
+    ===============
     """
-    # def authorize_payed_user(self, payment_id, chat_id, status, create_date, end_date):
-    #     """ Inserts user to the table of paid users
-
-    #     To make insertion more reliable
-    #     you should provide arguments by name
-    #     .authorizeUser(payment_id = 1, chat_id = 1,day = 1, time = 1, username = "lol", email = "kek")
-
-    #     return if insertion was succesfull(True) or not (False)"""
-
-    #     sql = 'UPDATE Payments SET (payment_id, chat_id, status, create_date, end_date) VALUES (?,?,?,?,?)'
-    #     args = [payment_id, chat_id, status, create_date, end_date]
-    #     try:
-    #         self.cursor.execute(sql, args)
-    #         self.conn.commit()
-    #         return True
-    #     except sqlite3.IntegrityError:
-    #         print("User exists")
-    #         return False
-
     def check_payed_user(self, chat_id):
-        """ Checks out if provided user in our payments tables
-        return boolean answer"""
+        # Checks out if provided user in our payments tables return boolean answer
         sql = "SELECT EXISTS(SELECT * FROM Payments WHERE chat_id = (?) AND (?) <= end_date)"
         args = [chat_id, int(time.time())]
         answer = False
@@ -103,7 +93,6 @@ class DbInterface:
             self.conn.commit()
             return answer
 
-
     def get_payment_id(self, chat_id):
         sql = "SELECT payment_id FROM Payments WHERE chat_id = (?)"
         args = [chat_id]
@@ -116,7 +105,6 @@ class DbInterface:
         finally:
             self.conn.commit()
             return data
-
 
     def set_status(self, chat_id, status):
         sql = "UPDATE Payments SET status = (?) WHERE chat_id = (?)"
@@ -157,24 +145,45 @@ class DbInterface:
             self.conn.commit()
             return data
 
-    """
-    
-    GAMES SECTION
-    
-    """
-
-    def set_game(self, Name, Description, Location, Age, Type, Props):
-        """ Inserts game to the database """
-        sql = 'INSERT INTO Games (Name, Description, Location, Age, Type, Props) VALUES (?,?,?,?,?,?)'
-        args = [Name, Description, Location, Age, Type, Props]
+    # return all payment database for admin spreadsheet
+    def get_payments_data(self):
+        sql = "SELECT * FROM Payments"
         try:
-            self.cursor.execute(sql, args)
-            print(f"Game {Name} inserted succsesfully")
-        except sqlite3.IntegrityError:
-            print(f"ERROR while inserting {Name}")
+            self.cursor.execute(sql)
+        except Exception as e:
+            print(f"SELECT failed {e}")
+        finally:
+            self.conn.commit()
+            return self.cursor.fetchall()
+
+
+    """
+    ================
+    GAMES SECTION
+    =================
+    """
+    # cleans games table before update
+    def delete_games(self):
+        sql = "DELETE FROM Games"
+        try:
+            self.cursor.execute(sql)
+        except Exception as e:
+            print(f" Delete shit happened {e}")
+        finally:
+            self.conn.commit()
+        return "Delete done"
+
+    # insert multiple games to the database at once
+    def set_games(self, games_to_insert):
+        sql = 'INSERT INTO Games (Name, Description, Location, Type, Age, Props) VALUES (?,?,?,?,?,?)'
+        try:
+            self.cursor.executemany(sql, games_to_insert)
+        except Exception as e:
+            print(f"ERROR while inserting {e}")
         finally:
             self.conn.commit()
 
+    # return all games+name that sutisfy the qequirments
     def get_games(self, Location=None, Type=None,  Age=None, Props=None):
         sql = "SELECT Name, Description FROM Games WHERE "
         sql += f'(Location LIKE \'%{Location}%\' OR Location="")'
@@ -184,7 +193,7 @@ class DbInterface:
             sql += f'AND (Type LIKE \'%{Type}%\' OR Type="")'
         if Props is not None:
             sql += f'AND (Props LIKE \'%{Props}%\' OR Props="")'
-        data = False
+        data = []
         try:
             self.cursor.execute(sql)  # , args)
             data = self.cursor.fetchall()
@@ -194,7 +203,8 @@ class DbInterface:
             self.conn.commit()
         return data
 
-    def get_game(self, game):
+    # return game with a passed name
+    def get_game(self, game: str) -> str:
         sql = "SELECT Description FROM Games WHERE Name = (?)"
         args = [game]
         data = False
@@ -209,19 +219,24 @@ class DbInterface:
             return data
 
 
-
-path = "../database.db"
-
-db_path = os.getcwd() + "/database.db"
-full_path = os.path.abspath(os.path.expanduser(
-    os.path.expandvars(path)))
-DB = DbInterface(full_path)
+# setting up the database
+def start_database():
+    database = "database.db"
+    # if no db file -> create one
+    if not path.exists(database):
+        print("no database found")
+        create_path = path.abspath(getcwd())
+        create_path = path.join(create_path, database)
+        print(f"create_path: {create_path}")
+        f = open(create_path, "x")
+        f.close()
+    full_path = path.abspath(path.expanduser(path.expandvars(database)))
+    DB = DbInterface(full_path)
+    return DB
+DB = start_database()
 
 if __name__ == "__main__":
-    # file = "database.db"
-    # BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    # db_path = os.path.join(BASE_DIR, file)
-    db_path = os.getcwd() + "/database.db"
-    DB = DbInterface(db_path)
+    # pprint(DB.get_payment_data())
     # DB.add_user(383327735, 'alexeymarkovski', 'Alexey', 'Markovski', '380952793306')
-    print(DB.check_payed_user(383327735))
+    # print(DB.check_payed_user(383327735))
+    pass
