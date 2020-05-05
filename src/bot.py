@@ -1,6 +1,6 @@
 from telegram.ext import Updater, PreCheckoutQueryHandler, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from os import environ
+from os import environ, path
 
 from Logic.Commands import *
 from Logic.Payment import *
@@ -9,6 +9,21 @@ from Logic.Questions import ask_location, ask_type, ask_age, ask_props, result, 
 from Logic.variables import *
 from Logic.Admin import *
 
+def env():
+    enviroment = ".env"
+    create_path = path.abspath(getcwd())
+    create_path = path.join(create_path, "src", enviroment)
+
+    if not path.exists(create_path):
+        print("no .env found")
+        print(f"create_path: {create_path}")
+        f = open(create_path, "x")
+        f.close()
+        print(".env need to be completed")
+    else:
+        print(".env exist")
+env()
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -16,7 +31,9 @@ print("Modules import succesfull")
 
 
 def main():
-    updater = Updater(environ.get("API_KEY"), use_context=True)
+
+    token = environ["API_KEY"]
+    updater = Updater(token, use_context=True)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
