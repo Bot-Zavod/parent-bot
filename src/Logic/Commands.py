@@ -14,18 +14,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # save chat_id to users.txt in case it is not already there
-def save_id(chat_id):
-    path = "users.txt"
-    full_path = os.path.abspath(os.path.expanduser(
-        os.path.expandvars(path)))
+# def save_id(chat_id):
+#     path = "users.txt"
+#     full_path = os.path.abspath(os.path.expanduser(
+#         os.path.expandvars(path)))
 
-    with open(full_path, 'r+') as users:
-        chat_id = str(chat_id)+"\n"
-        if chat_id not in users.read():
-            users.write(chat_id)
-        else:
-            print("This fucker is already here")
-        users.close()
+#     with open(full_path, 'r+') as users:
+#         chat_id = str(chat_id)+"\n"
+#         if chat_id not in users.read():
+#             users.write(chat_id)
+#         else:
+#             print("This fucker is already here")
+#         users.close()
 
 
 def start(update, context):
@@ -41,7 +41,7 @@ def start(update, context):
             text["start_games"], reply_markup=reply_markup)
         return ASK_LOCATION
     else:
-        save_id(chat_id)
+        DB.save_id(chat_id)
         demo_button = InlineKeyboardButton(
             text["demo_button"], callback_data="demo")
         subscribe_button = InlineKeyboardButton(

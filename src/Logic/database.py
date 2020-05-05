@@ -37,13 +37,77 @@ class DbInterface:
             # Users table 
             """
             CREATE TABLE IF NOT EXISTS "Users" (
-            "chat_id"	INTEGER)
+            "chat_id"	INTEGER UNIQUE)
             """
         ]
 
         for sql in sql_tables:
             self.cursor.execute(sql)
             self.conn.commit()
+
+
+    # save id to Users
+    def save_id(self, chat_id) -> None:
+        sql = "INSERT OR IGNORE INTO Users (chat_id) values(?)"
+        args = [chat_id]
+        try:
+            self.cursor.execute(sql, args)
+        except:
+            print(f"Saving {chat_id} failed")
+        finally:
+            self.conn.commit()
+    
+    # return number of [visitors, subscribed, unsubscribed]
+    def users_count(self) -> list:
+        sql = "SELECT COUNT(*) FROM Users"
+        try:
+            self.cursor.execute(sql)
+            all_user = self.cursor.fetchall()[0][0]
+        except:
+            print(f"Check failed")
+        finally:
+            self.conn.commit()
+        
+        sql = "SELECT COUNT(*) FROM Payments WHERE status!='unsubscribed'"
+        try:
+            self.cursor.execute(sql)
+            payed_user = self.cursor.fetchall()[0][0]
+        except:
+            print(f"Check failed")
+        finally:
+            self.conn.commit()
+        
+        sql = "SELECT COUNT(*) FROM Payments"
+        try:
+            self.cursor.execute(sql)
+            all_payed_user = self.cursor.fetchall()[0][0]
+        except:
+            print(f"Check failed")
+        finally:
+            self.conn.commit()
+        
+        return [all_user, payed_user, all_payed_user-payed_user]
+
+    # return chat_id list of passed user category
+    def get_users(self, group= None) -> list:
+        sql = "SELECT chat_id FROM Users"
+        if group!=None:
+            if group == "PAYED":
+                sql = "SELECT chat_id FROM Payments WHERE status!='unsubscribed'"
+            elif group == "UNPAYED":
+                sql = "SELECT chat_id FROM Payments WHERE status='unsubscribed'"
+        try:
+            self.cursor.execute(sql)
+            answer = self.cursor.fetchall()
+            if answer != []:
+                users = answer[0]
+            else:
+                users = []
+        except:
+            print(f"Check failed")
+        finally:
+            self.conn.commit()
+        return users
 
     """
     ===============
@@ -230,13 +294,17 @@ def start_database():
         print(f"create_path: {create_path}")
         f = open(create_path, "x")
         f.close()
+    else:
+        print("Database exist")
     full_path = path.abspath(path.expanduser(path.expandvars(database)))
     DB = DbInterface(full_path)
     return DB
 DB = start_database()
 
 if __name__ == "__main__":
-    # pprint(DB.get_payment_data())
+    print(DB.get_users())
+    print(DB.get_users("PAYED"))
+    print(DB.get_users("UNPAYED"))
+
     # DB.add_user(383327735, 'alexeymarkovski', 'Alexey', 'Markovski', '380952793306')
-    # print(DB.check_payed_user(383327735))
-    pass
+    # print(DB.check_payed_user(383327735)

@@ -50,7 +50,10 @@ def main():
             BACK_ANSWER:  [*necessary_hendlers, MessageHandler(Filters.text, back_answer)],
 
             ADMIN:        [*necessary_hendlers, MessageHandler(Filters.text, admin_handler)],
-            PUSH_WHO:     [*necessary_hendlers, MessageHandler(Filters.text, push_who)]
+            PUSH_WHO:     [*necessary_hendlers, MessageHandler(Filters.text, push_who)],
+            PUSH_WHAT:    [*necessary_hendlers, MessageHandler(Filters.text, push_text)],
+            PUSH_SUBMIT:  [*necessary_hendlers, MessageHandler(Filters.text, push_handler)],
+            
 
         },
         fallbacks=[CommandHandler('stop', done)]
