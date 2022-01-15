@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "parent_bot"
+version = "0.1.0"
+description = ""
+authors = ["Vlad-Vargan <blach.smith.2000@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+python-telegram-bot = "^13.10"
+python-dotenv = "^0.19.2"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.16.0"
+black = "^21.12b0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
