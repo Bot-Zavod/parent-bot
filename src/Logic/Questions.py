@@ -6,7 +6,7 @@ import os
 
 from .user_manager import UM
 from .database import DB
-from .Commands import start
+from .commands import start
 from .variables import *
 from .etc import text, photos, emoji
 
@@ -179,7 +179,7 @@ def final_answer(update, context):
         return result(update, context)
 
     if game in photos.keys():
-        path = f"src/Logic/img/{photos[game]}"
+        path = f"src/logic/img/{photos[game]}"
         full_path = os.path.abspath(os.path.expanduser(
             os.path.expandvars(path)))
         update.message.reply_photo(photo=open(full_path, 'rb'), caption=game)

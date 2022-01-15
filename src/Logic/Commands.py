@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 def start(update, context):
     chat_id = update.message.chat.id
-    isPayed = DB.check_payed_user(chat_id) 
+    isPayed = DB.check_payed_user(chat_id)
     if update.message.chat.username in environ["ADMIN"]:
         isPayed = True
     if isPayed:
@@ -62,7 +62,7 @@ def demo(update, context):
         chat_id=update.callback_query.message.chat.id,
         message_id=update.callback_query.message.message_id,
     )
-    path = f"src/Logic/img/demo.mp4"
+    path = f"src/logic/img/demo.mp4"
     full_path = os.path.abspath(os.path.expanduser(
         os.path.expandvars(path)))
     context.bot.send_video(

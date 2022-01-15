@@ -1,13 +1,15 @@
+from dotenv import load_dotenv
 from telegram.ext import Updater, PreCheckoutQueryHandler, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from os import environ, path
 
-from Logic.Commands import *
-from Logic.Payment import *
-from Logic.Methods import *
-from Logic.Questions import ask_location, ask_type, ask_age, ask_props, result, final_answer, back_answer
-from Logic.variables import *
-from Logic.Admin import *
+from logic.commands import *
+from logic.payment import *
+from logic.methods import *
+from logic.questions import ask_location, ask_type, ask_age, ask_props, result, final_answer, back_answer
+from logic.variables import *
+from logic.admin import *
+
 
 def env():
     enviroment = ".env"
@@ -22,9 +24,10 @@ def env():
         print(".env need to be completed")
     else:
         print(".env exist")
+
+
 env()
 
-from dotenv import load_dotenv
 load_dotenv()
 
 print("Modules import succesfull")
@@ -70,7 +73,7 @@ def main():
             PUSH_WHO:     [*necessary_hendlers, MessageHandler(Filters.text, push_who)],
             PUSH_WHAT:    [*necessary_hendlers, MessageHandler(Filters.text, push_text)],
             PUSH_SUBMIT:  [*necessary_hendlers, MessageHandler(Filters.text, push_handler)],
-            
+
 
         },
         fallbacks=[CommandHandler('stop', done)]
