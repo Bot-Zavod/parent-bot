@@ -1,15 +1,18 @@
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import ConversationHandler
-from random import randint
-from os import getcwd
 import logging
+from os import getcwd
+from random import randint
+
+from telegram import ReplyKeyboardMarkup
+from telegram import ReplyKeyboardRemove
+from telegram.ext import ConversationHandler
 
 from src.data import text
 from src.database import DbInterface
 from src.states import State
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
 logger = logging.getLogger(__name__)
 
 

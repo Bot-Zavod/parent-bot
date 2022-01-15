@@ -1,5 +1,3 @@
-
-
 class State:
     PAY = 1
     GAMES = 2

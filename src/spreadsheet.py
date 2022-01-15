@@ -1,8 +1,8 @@
-from oauth2client.service_account import ServiceAccountCredentials
-import gspread
-import pprint
 import os
-from os
+import pprint
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 from src.database import DB
 
@@ -24,11 +24,12 @@ def spreadsheet(tab: int) -> object:
     else:
         raise ValueError(f"Not known tab {tab}")
 
-    scope = ['https://spreadsheets.google.com/feeds',
-             'https://www.googleapis.com/auth/drive']
-    path = 'Vargan-API.json'
-    full_path = os.path.abspath(os.path.expanduser(
-        os.path.expandvars(path)))
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive",
+    ]
+    path = "Vargan-API.json"
+    full_path = os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
     creds = ServiceAccountCredentials.from_json_keyfile_name(full_path, scope)
     client = gspread.authorize(creds)
     sheet = client.open_by_key(table)
@@ -59,8 +60,10 @@ def update_users():
         sheet.update("A2", payments)
     except Exception as e:
         return "Failed with " + str(e)
-    return f"Payments spredsheet was succesfully updated with {users_num} users\n\n" +\
-        "https://docs.google.com/spreadsheets/d/1ntVH1ze2jd5XjfajdAQu9cBMKkCeWsl__PxQtDmC-eQ"
+    return (
+        f"Payments spredsheet was succesfully updated with {users_num} users\n\n"
+        + "https://docs.google.com/spreadsheets/d/1ntVH1ze2jd5XjfajdAQu9cBMKkCeWsl__PxQtDmC-eQ"
+    )
 
 
 if __name__ == "__main__":

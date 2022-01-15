@@ -1,14 +1,17 @@
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram import ParseMode
-
-from random import choice
 import os
+from random import choice
 
-from src.user_manager import UM
-from src.database import DB
+from telegram import ParseMode
+from telegram import ReplyKeyboardMarkup
+from telegram import ReplyKeyboardRemove
+
 from src.commands import start
+from src.data import emoji
+from src.data import photos
+from src.data import text
+from src.database import DB
 from src.states import State
-from src.data import text, photos, emoji
+from src.user_manager import UM
 
 
 def check(chat_id, update, context):
@@ -26,10 +29,12 @@ def ask_location(update, context):
         UM.delete_user(update.message.chat.id)
         return start(update, context)
 
-    reply_keyboard = [[text["inside"]],
-                      [text["outside"]],
-                      [text["trip"]],
-                      [text["back"]]]
+    reply_keyboard = [
+        [text["inside"]],
+        [text["outside"]],
+        [text["trip"]],
+        [text["back"]],
+    ]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["ask_location"], reply_markup=markup)
     return State.ASK_TYPE
@@ -49,12 +54,14 @@ def ask_type(update, context):
     else:
         return start(update, context)
 
-    reply_keyboard = [[text["active"]],
-                      [text["educational"]],
-                      [text["calming"]],
-                      [text["family"]],
-                      [text["task"]],
-                      [text["back"]]]
+    reply_keyboard = [
+        [text["active"]],
+        [text["educational"]],
+        [text["calming"]],
+        [text["family"]],
+        [text["task"]],
+        [text["back"]],
+    ]
     if massage == text["outside"]:
         reply_keyboard = reply_keyboard[:3] + [reply_keyboard[-1]]
     elif massage == text["trip"]:
@@ -69,8 +76,13 @@ def ask_age(update, context):
     chat_id = update.message.chat.id
     check(chat_id, update, context)
 
-    if massage in (text["active"], text["educational"], text["calming"],
-                   text["family"], text["task"]):
+    if massage in (
+        text["active"],
+        text["educational"],
+        text["calming"],
+        text["family"],
+        text["task"],
+    ):
         UM.currentUsers[chat_id].add_type(massage, 2)
     elif massage == text["back"]:
         if UM.currentUsers[chat_id].stage == 1:
@@ -85,11 +97,13 @@ def ask_age(update, context):
         print(UM.currentUsers[chat_id])
         return ask_props(update, context)
 
-    reply_keyboard = [[text["2-3"]],
-                      [text["3-4"]],
-                      [text["4-6"]],
-                      [text["6-8"]],
-                      [text["back"]]]
+    reply_keyboard = [
+        [text["2-3"]],
+        [text["3-4"]],
+        [text["4-6"]],
+        [text["6-8"]],
+        [text["back"]],
+    ]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["ask_age"], reply_markup=markup)
     return State.ASK_PROPS
@@ -111,9 +125,7 @@ def ask_props(update, context):
     else:
         return ask_type(update, context)
 
-    reply_keyboard = [[text["yes"]],
-                      [text["no"]],
-                      [text["back"]]]
+    reply_keyboard = [[text["yes"]], [text["no"]], [text["back"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["ask_props"], reply_markup=markup)
     return State.RESULT
@@ -152,8 +164,9 @@ def result(update, context):
     else:
         answer = text["result"]
 
-    reply_keyboard = list(
-        map(lambda x: [x[0]+" "+choice(emoji)], reply_keys)) + [[text["menu"]]]
+    reply_keyboard = list(map(lambda x: [x[0] + " " + choice(emoji)], reply_keys)) + [
+        [text["menu"]]
+    ]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text=answer, reply_markup=markup)
     return State.ANSWER
@@ -180,16 +193,16 @@ def final_answer(update, context):
 
     if game in photos.keys():
         path = f"src/images/{photos[game]}"
-        full_path = os.path.abspath(os.path.expanduser(
-            os.path.expandvars(path)))
-        update.message.reply_photo(photo=open(full_path, 'rb'), caption=game)
+        full_path = os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
+        update.message.reply_photo(photo=open(full_path, "rb"), caption=game)
 
     reply_keyboard = [[text["back"], text["menu"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(
         text=description.replace("<br>", "\n"),
         reply_markup=markup,
-        parse_mode=ParseMode.HTML)
+        parse_mode=ParseMode.HTML,
+    )
     return State.BACK_ANSWER
 
 

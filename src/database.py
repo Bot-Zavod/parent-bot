@@ -1,8 +1,6 @@
-import sqlite3
 import os
-from os import path, getcwd
+import sqlite3
 import time
-from pprint import pprint
 
 
 class DbInterface:
@@ -21,7 +19,6 @@ class DbInterface:
             "Type"	TEXT,
             "Props"	TEXT)
             """,
-
             # Payed_Users table
             """
             CREATE TABLE IF NOT EXISTS "Payments" (
@@ -33,12 +30,11 @@ class DbInterface:
             "order_id"	varchar(50),
             PRIMARY KEY("payment_id"))
             """,
-
             # Users table
             """
             CREATE TABLE IF NOT EXISTS "Users" (
             "chat_id"	INTEGER UNIQUE)
-            """
+            """,
         ]
 
         for sql in sql_tables:
@@ -51,8 +47,8 @@ class DbInterface:
         args = [chat_id]
         try:
             self.cursor.execute(sql, args)
-        except:
-            print(f"Saving {chat_id} failed")
+        except Exception as error:
+            print(f"Saving {chat_id} failed, error: {error}")
         finally:
             self.conn.commit()
 
@@ -62,8 +58,8 @@ class DbInterface:
         try:
             self.cursor.execute(sql)
             all_user = self.cursor.fetchall()[0][0]
-        except:
-            print(f"Check failed")
+        except Exception as error:
+            print(f"Check failed, error: {error}")
         finally:
             self.conn.commit()
 
@@ -71,8 +67,8 @@ class DbInterface:
         try:
             self.cursor.execute(sql)
             payed_user = self.cursor.fetchall()[0][0]
-        except:
-            print(f"Check failed")
+        except Exception as error:
+            print(f"Check failed, error: {error}")
         finally:
             self.conn.commit()
 
@@ -85,7 +81,7 @@ class DbInterface:
         finally:
             self.conn.commit()
 
-        return [all_user, payed_user, all_payed_user-payed_user]
+        return [all_user, payed_user, all_payed_user - payed_user]
 
     # return chat_id list of passed user category
     def get_users(self, group=None) -> list:
@@ -123,8 +119,8 @@ class DbInterface:
         try:
             self.cursor.execute(sql, args)
             cursor = self.cursor.fetchall()[0][0]
-           # print('Cursor')
-           # print(cursor)
+            # print('Cursor')
+            # print(cursor)
             if cursor == 1:
                 answer = True
             else:
@@ -136,7 +132,7 @@ class DbInterface:
             return answer
 
     def is_subscribed(self, chat_id):
-        """ Checks out if provided user in our payments tables
+        """Checks out if provided user in our payments tables
         return boolean answer"""
         sql = "SELECT EXISTS(SELECT * FROM Payments WHERE chat_id = (?) AND status = 'subscribed')"
         args = [chat_id]
@@ -145,8 +141,8 @@ class DbInterface:
         try:
             self.cursor.execute(sql, args)
             cursor = self.cursor.fetchall()[0][0]
-           # print('Cursor')
-           # print(cursor)
+            # print('Cursor')
+            # print(cursor)
             if cursor == 1:
                 answer = True
             else:
@@ -239,7 +235,7 @@ class DbInterface:
 
     # insert multiple games to the database at once
     def set_games(self, games_to_insert):
-        sql = 'INSERT INTO Games (Name, Description, Location, Type, Age, Props) VALUES (?,?,?,?,?,?)'
+        sql = "INSERT INTO Games (Name, Description, Location, Type, Age, Props) VALUES (?,?,?,?,?,?)"
         try:
             self.cursor.executemany(sql, games_to_insert)
         except Exception as e:
@@ -248,15 +244,15 @@ class DbInterface:
             self.conn.commit()
 
     # return all games+name that sutisfy the qequirments
-    def get_games(self, Location=None, Type=None,  Age=None, Props=None):
+    def get_games(self, Location=None, Type=None, Age=None, Props=None):
         sql = "SELECT Name, Description FROM Games WHERE "
-        sql += f'(Location LIKE \'%{Location}%\' OR Location="")'
+        sql += f"(Location LIKE '%{Location}%' OR Location=\"\")"
         if Age is not None:
-            sql += f'AND (Age LIKE \'%{Age}%\' OR Age="")'
+            sql += f"AND (Age LIKE '%{Age}%' OR Age=\"\")"
         if Type is not None:
-            sql += f'AND (Type LIKE \'%{Type}%\' OR Type="")'
+            sql += f"AND (Type LIKE '%{Type}%' OR Type=\"\")"
         if Props is not None:
-            sql += f'AND (Props LIKE \'%{Props}%\' OR Props="")'
+            sql += f"AND (Props LIKE '%{Props}%' OR Props=\"\")"
         data = []
         try:
             self.cursor.execute(sql)  # , args)
@@ -276,8 +272,7 @@ class DbInterface:
             self.cursor.execute(sql, args)
             data = self.cursor.fetchall()[0][0]
         except:
-            print(
-                f"Your game {game} does not exist or some other shit happened")
+            print(f"Your game {game} does not exist or some other shit happened")
         finally:
             self.conn.commit()
             return data
@@ -287,16 +282,16 @@ class DbInterface:
 def start_database():
     database = "database.db"
     # if no db file -> create one
-    if not path.exists(database):
+    if not os.path.exists(database):
         print("no database found")
-        create_path = path.abspath(getcwd())
-        create_path = path.join(create_path, database)
+        create_path = os.path.abspath(os.getcwd())
+        create_path = os.path.join(create_path, database)
         print(f"create_path: {create_path}")
         f = open(create_path, "x")
         f.close()
     else:
         print("Database exist")
-    full_path = path.abspath(path.expanduser(path.expandvars(database)))
+    full_path = os.path.abspath(os.path.expanduser(os.path.expandvars(database)))
     DB = DbInterface(full_path)
     return DB
 

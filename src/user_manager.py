@@ -1,14 +1,14 @@
-from telegram.ext import CallbackContext
-
-from time import sleep, time
 import functools
 import threading
+from time import sleep
+from time import time
+
+from telegram.ext import CallbackContext
 
 from src.data import text
 
 
 class UserManager:
-
     def __init__(self):
         self.user_removal_time = 3600
         self.currentUsers = {}
@@ -18,7 +18,7 @@ class UserManager:
     def __remove_old_users(self):
         while True:
             sleep(self.user_removal_time)
-            print('deleteCycle')
+            print("deleteCycle")
             print(self.currentUsers)
             users_to_delete = []
             for user in self.currentUsers.values():
@@ -26,13 +26,13 @@ class UserManager:
                     users_to_delete.append(user.chat_id)
             for chat_id in users_to_delete:
                 self.delete_user(chat_id)
-                print(f'deleting user {chat_id}')
+                print(f"deleting user {chat_id}")
 
     def delete_user(self, chat_id):
         if chat_id in self.currentUsers:
             del self.currentUsers[chat_id]
         else:
-            print(f'[WARNING]DELETING UNEXISTING USER {chat_id}')
+            print(f"[WARNING]DELETING UNEXISTING USER {chat_id}")
 
     def create_user(self, chat_id):
         self.currentUsers[chat_id] = User(chat_id)
@@ -44,7 +44,9 @@ class UserManager:
 
 
 class User:
-    def __init__(self, chat_id, Location=None, Type=None, Age=None, Props=None, stage=0):
+    def __init__(
+        self, chat_id, Location=None, Type=None, Age=None, Props=None, stage=0
+    ):
         self.chat_id = chat_id
         self.Location = Location
         self.Type = Type

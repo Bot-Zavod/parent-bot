@@ -1,22 +1,27 @@
-from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import datetime
-from random import randint
-from os import environ
-import logging
 import base64
-import json
+import contextlib
 import hashlib
-from src.commands import start
-from src.states import State
-from src.data import text
-from src.database import DB
+import json
+import logging
+from datetime import datetime
+from os import environ
+from random import randint
 from urllib.parse import urlencode
 from urllib.request import urlopen
-import contextlib
+
 from requests import post
+from telegram import InlineKeyboardButton
+from telegram import InlineKeyboardMarkup
+from telegram import ReplyKeyboardMarkup
+
+from src.commands import start
+from src.data import text
+from src.database import DB
+from src.states import State
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
 logger = logging.getLogger(__name__)
 
 
@@ -30,13 +35,13 @@ def subscribe(update, context):
     if isPayed:
         update.message.reply_text(text["already_subscribed"])
         return start(update, context)
-    month = InlineKeyboardButton(text='Месяц', callback_data="month")
-    year = InlineKeyboardButton(text='Год', callback_data="year")
+    month = InlineKeyboardButton(text="Месяц", callback_data="month")
+    year = InlineKeyboardButton(text="Год", callback_data="year")
     reply_markup = InlineKeyboardMarkup([[month], [year]])
     context.bot.send_message(
         chat_id=update.message.chat.id,
         text="Выберите срок подписки",
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
     )
     logger.info("User %s: ask to subscribe", update.message.chat.id)
 
@@ -48,29 +53,36 @@ def subprocessing(update, context):
 
     public_key = environ["PUBLIC_KEY"]
     private_key = environ["PRIVAT_KEY"]
-    subscribe_date_start = str(datetime.now().date())+" 00:00:00"
-    description = "Subscribe:" + \
-        str(update.message.chat.id)+":"+str(update.message.message_id+1)
+    subscribe_date_start = str(datetime.now().date()) + " 00:00:00"
+    description = (
+        "Subscribe:"
+        + str(update.message.chat.id)
+        + ":"
+        + str(update.message.message_id + 1)
+    )
     result_url = "https://t.me/superparent_bot"
     server_url = environ["SERVER"]
 
-    params = {"public_key": public_key,
-              "version": "3",
-              "action": "subscribe",
-              "amount": "0.3",
-              "currency": "UAH",
-              "description": description,
-              "subscribe_date_start": subscribe_date_start,
-              "subscribe_periodicity": term,
-              "result_url": result_url,
-              "server_url": server_url,
-              "order_id": randint(0, 999999)}
+    params = {
+        "public_key": public_key,
+        "version": "3",
+        "action": "subscribe",
+        "amount": "0.3",
+        "currency": "UAH",
+        "description": description,
+        "subscribe_date_start": subscribe_date_start,
+        "subscribe_periodicity": term,
+        "result_url": result_url,
+        "server_url": server_url,
+        "order_id": randint(0, 999999),
+    }
 
     data = make_data(params)
     signature = make_signature(private_key, data, private_key)
 
     URL = make_tiny(
-        f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}")
+        f"https://www.liqpay.ua/api/3/checkout?data={data}&signature={signature}"
+    )
     inline_button = InlineKeyboardButton(text["pay"], url=URL)
     reply_markup = InlineKeyboardMarkup([[inline_button]])
     context.bot.delete_message(
@@ -81,10 +93,14 @@ def subprocessing(update, context):
         chat_id=update.message.chat.id,
         # message_id=update.message.message_id,
         text=text["pay_intro"],
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
     )
-    logger.info("User %s: (term: %s)genetare link to subscribe - %s;",
-                update.message.chat.id, term, URL)
+    logger.info(
+        "User %s: (term: %s)genetare link to subscribe - %s;",
+        update.message.chat.id,
+        term,
+        URL,
+    )
 
 
 def unsubscribe(update, context):
@@ -94,12 +110,15 @@ def unsubscribe(update, context):
         update.message.reply_text(text=text["not_subscribed"])
         return start(update, context)
     button1 = InlineKeyboardButton(
-        text["unsubscribe"], callback_data="unsubscribe_confirm")
+        text["unsubscribe"], callback_data="unsubscribe_confirm"
+    )
     button2 = InlineKeyboardButton(
-        text["do_not_unsubscribe"], callback_data="no_unsubscribe")
+        text["do_not_unsubscribe"], callback_data="no_unsubscribe"
+    )
     reply_markup = InlineKeyboardMarkup([[button1], [button2]])
     update.message.reply_text(
-        text=text["ask_to_unsubscribe"], reply_markup=reply_markup)
+        text=text["ask_to_unsubscribe"], reply_markup=reply_markup
+    )
     logger.info("User %s: ask Unsubscribe;", update.message.chat.id)
 
 
@@ -125,21 +144,22 @@ def unsubscribe_request(update, context):
         "public_key": public_key,
         "action": "unsubscribe",
         "version": "3",
-        "order_id": order_id}
+        "order_id": order_id,
+    }
     data = make_data(params)
     signature = make_signature(private_key, data, private_key)
     url = "https://www.liqpay.ua/api/request"
-    res = post(url, {'data': data, 'signature': signature}).json()
+    res = post(url, {"data": data, "signature": signature}).json()
     print(res)
     logger.info("User %s: %s", chat_id, res)
-    if res['result'] == 'ok':
+    if res["result"] == "ok":
         # HERE must be method that change status on unsubscribe
-        status_res = DB.set_status('unsubscribe', chat_id)
+        status_res = DB.set_status("unsubscribe", chat_id)
         context.bot.edit_message_text(
-            chat_id=chat_id, message_id=update.message.message_id, text=text["done"])
+            chat_id=chat_id, message_id=update.message.message_id, text=text["done"]
+        )
     else:
-        logger.info(
-            f"User {chat_id}: unsubscribe with status = {res['result']}")
+        logger.info(f"User {chat_id}: unsubscribe with status = {res['result']}")
 
 
 # def unsubscribe_done_adm(update, context):
@@ -164,20 +184,19 @@ def no_unsubscribe(update, context):
 
 
 def make_data(params):
-    json_data = json.dumps(params).encode('utf-8')
-    data = base64.b64encode(json_data).decode('utf-8')
+    json_data = json.dumps(params).encode("utf-8")
+    data = base64.b64encode(json_data).decode("utf-8")
     return data
 
 
 def make_signature(*args):
-    joined_fields = ''.join(x for x in args)
-    sha = hashlib.sha1(joined_fields.encode('utf-8')).digest()
-    res = base64.b64encode(sha).decode('utf-8')
+    joined_fields = "".join(x for x in args)
+    sha = hashlib.sha1(joined_fields.encode("utf-8")).digest()
+    res = base64.b64encode(sha).decode("utf-8")
     return res
 
 
 def make_tiny(url):
-    request_url = ('http://tinyurl.com/api-create.php?' +
-                   urlencode({'url': url}))
+    request_url = "http://tinyurl.com/api-create.php?" + urlencode({"url": url})
     with contextlib.closing(urlopen(request_url)) as response:
-        return response.read().decode('utf-8 ')
+        return response.read().decode("utf-8 ")

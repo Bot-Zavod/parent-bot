@@ -1,16 +1,22 @@
-from telegram import ReplyKeyboardRemove, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ConversationHandler
-from os import getcwd, environ
-import os
 import logging
+import os
+from os import environ
+from os import getcwd
 
+from telegram import InlineKeyboardButton
+from telegram import InlineKeyboardMarkup
+from telegram import ReplyKeyboardMarkup
+from telegram import ReplyKeyboardRemove
+from telegram.ext import ConversationHandler
+
+from src.data import text
 from src.database import DB
 from src.states import State
-from src.data import text
 
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
 logger = logging.getLogger(__name__)
 
 # save chat_id to users.txt in case it is not already there
@@ -35,51 +41,44 @@ def start(update, context):
         isPayed = True
     if isPayed:
         reply_keyboard = [[text["games"]]]
-        reply_markup = ReplyKeyboardMarkup(
-            reply_keyboard, resize_keyboard=True)
-        update.message.reply_text(
-            text["start_games"], reply_markup=reply_markup)
+        reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
+        update.message.reply_text(text["start_games"], reply_markup=reply_markup)
         return State.ASK_LOCATION
     else:
         DB.save_id(chat_id)
-        demo_button = InlineKeyboardButton(
-            text["demo_button"], callback_data="demo")
+        demo_button = InlineKeyboardButton(text["demo_button"], callback_data="demo")
         subscribe_button = InlineKeyboardButton(
-            text["subscribe"], callback_data="subscribe")
-        reply_markup = InlineKeyboardMarkup(
-            [[demo_button], [subscribe_button]])
-        update.message.reply_text(
-            text=text["pay_please"], reply_markup=reply_markup)
+            text["subscribe"], callback_data="subscribe"
+        )
+        reply_markup = InlineKeyboardMarkup([[demo_button], [subscribe_button]])
+        update.message.reply_text(text=text["pay_please"], reply_markup=reply_markup)
 
     logger.info("User %s: send /start command;", update.message.chat.id)
 
 
 def demo(update, context):
     subscribe_button = InlineKeyboardButton(
-        text["subscribe"], callback_data="subscribe")
+        text["subscribe"], callback_data="subscribe"
+    )
     reply_markup = InlineKeyboardMarkup([[subscribe_button]])
     context.bot.delete_message(
         chat_id=update.callback_query.message.chat.id,
         message_id=update.callback_query.message.message_id,
     )
     path = f"src/images/demo.mp4"
-    full_path = os.path.abspath(os.path.expanduser(
-        os.path.expandvars(path)))
+    full_path = os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
     context.bot.send_video(
         chat_id=update.callback_query.message.chat.id,
         video=open(full_path, "rb"),
         caption=text["demo"],
-        reply_markup=reply_markup
-
+        reply_markup=reply_markup,
     )
-    logger.info("User %s: ask DEMO games;",
-                update.callback_query.message.chat.id)
+    logger.info("User %s: ask DEMO games;", update.callback_query.message.chat.id)
 
 
 def done(update, context):
     update.message.reply_text(text["stop"])
-    logger.info("User %s: finished ConversationHandler;",
-                update.message.chat.id)
+    logger.info("User %s: finished ConversationHandler;", update.message.chat.id)
     return ConversationHandler.END
 
 
