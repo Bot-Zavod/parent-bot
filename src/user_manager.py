@@ -4,7 +4,7 @@ from time import sleep, time
 import functools
 import threading
 
-from .etc import text
+from src.etc import text
 
 
 class UserManager:
@@ -58,7 +58,7 @@ class User:
     def __str__(self):
         user = f"chat_id: {self.chat_id}\nlocation: {self.Location}\ntype: {self.Type}\nage: {self.Age}\nprops: {self.Props}\nstage: {self.stage}"
         return user
-    
+
     def get_data(self):
         data = [self.Location, self.Type, self.Age, self.Props]
         return data
@@ -84,7 +84,7 @@ class User:
             self.Location = "в дороге"
         self.stage = stage
         return Location
-    
+
     @refresh_action
     def add_type(self, Type, stage):
         if Type == text["active"]:
@@ -109,10 +109,10 @@ class User:
         elif Age == text["4-6"]:
             self.Age = "4-6"
         elif Age == text["6-8"]:
-            self.Age = "6-8"      
+            self.Age = "6-8"
         self.stage = stage
         return Age
-    
+
     @refresh_action
     def add_props(self, Props, stage):
         if Props == text["yes"]:
@@ -121,7 +121,7 @@ class User:
             self.Props = "нет"
         self.stage = stage
         return Props
-    
+
     @refresh_action
     def add_games(self, games):
         self.games = games

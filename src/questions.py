@@ -4,11 +4,11 @@ from telegram import ParseMode
 from random import choice
 import os
 
-from .user_manager import UM
-from .database import DB
-from .commands import start
-from .variables import *
-from .etc import text, photos, emoji
+from src.user_manager import UM
+from src.database import DB
+from src.commands import start
+from src.variables import *
+from src.etc import text, photos, emoji
 
 
 def check(chat_id, update, context):

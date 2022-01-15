@@ -4,9 +4,9 @@ from os import getcwd, environ
 import os
 import logging
 
-from .database import DB
-from .variables import *
-from .etc import text
+from src.database import DB
+from src.variables import *
+from src.etc import text
 
 
 logging.basicConfig(

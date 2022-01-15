@@ -6,10 +6,10 @@ import logging
 import base64
 import json
 import hashlib
-from .Commands import start
-from .variables import *
-from .etc import text
-from .database import DB
+from src.commands import start
+from src.variables import *
+from src.etc import text
+from src.database import DB
 from urllib.parse import urlencode
 from urllib.request import urlopen
 import contextlib
@@ -31,7 +31,7 @@ def subscribe(update, context):
         update.message.reply_text(text["already_subscribed"])
         return start(update, context)
     month = InlineKeyboardButton(text='Месяц', callback_data="month")
-    year = InlineKeyboardButton(text='Год', callback_data="year") 
+    year = InlineKeyboardButton(text='Год', callback_data="year")
     reply_markup = InlineKeyboardMarkup([[month], [year]])
     context.bot.send_message(
         chat_id=update.message.chat.id,
@@ -39,6 +39,7 @@ def subscribe(update, context):
         reply_markup=reply_markup
     )
     logger.info("User %s: ask to subscribe", update.message.chat.id)
+
 
 def subprocessing(update, context):
     update = update.callback_query if update.callback_query else update
@@ -113,7 +114,7 @@ def unsubscribe_confirm(update, context):
     return unsubscribe_request(update, context)
 
 
-#post request Server-Server to Unsubscribe
+# post request Server-Server to Unsubscribe
 def unsubscribe_request(update, context):
     update = update.callback_query if update.callback_query else update
     chat_id = update.message.chat.id
@@ -121,25 +122,27 @@ def unsubscribe_request(update, context):
     public_key = environ["PUBLIC_KEY"]
     private_key = environ["PRIVAT_KEY"]
     params = {
-      "public_key": public_key,
-      "action":"unsubscribe",
-      "version":"3",
-      "order_id":order_id}
+        "public_key": public_key,
+        "action": "unsubscribe",
+        "version": "3",
+        "order_id": order_id}
     data = make_data(params)
     signature = make_signature(private_key, data, private_key)
     url = "https://www.liqpay.ua/api/request"
-    res = post(url, {'data':data, 'signature':signature}).json()
+    res = post(url, {'data': data, 'signature': signature}).json()
     print(res)
     logger.info("User %s: %s", chat_id, res)
     if res['result'] == 'ok':
-	#HERE must be method that change status on unsubscribe
+        # HERE must be method that change status on unsubscribe
         status_res = DB.set_status('unsubscribe', chat_id)
-        context.bot.edit_message_text(chat_id=chat_id, message_id=update.message.message_id, text=text["done"])
+        context.bot.edit_message_text(
+            chat_id=chat_id, message_id=update.message.message_id, text=text["done"])
     else:
-        logger.info(f"User {chat_id}: unsubscribe with status = {res['result']}")
+        logger.info(
+            f"User {chat_id}: unsubscribe with status = {res['result']}")
 
 
-#def unsubscribe_done_adm(update, context):
+# def unsubscribe_done_adm(update, context):
 #    payment_id = int(update.callback_query.message.text.split()[1])
 #    print(f"payment_id unsubscribed: {payment_id}")
 #    # mark paymetn_id as unsubscribed

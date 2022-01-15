@@ -4,7 +4,7 @@ import pprint
 import os
 from os
 
-from .database import DB
+from src.database import DB
 
 """
 check this, in case you are not

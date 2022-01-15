@@ -3,11 +3,11 @@ from datetime import datetime
 from os import getcwd, remove, environ
 
 
-from .variables import *
-from .database import DB
-from .etc import text
-from .commands import start
-from .spreadsheet import update_games, update_users
+from src.variables import *
+from src.database import DB
+from src.etc import text
+from src.commands import start
+from src.spreadsheet import update_games, update_users
 
 push_text_group = None
 push_text_notification = None  # for text that admin wants to send

@@ -3,12 +3,12 @@ from telegram.ext import Updater, PreCheckoutQueryHandler, CommandHandler, Messa
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from os import environ, path
 
-from logic.commands import *
-from logic.payment import *
-from logic.methods import *
-from logic.questions import ask_location, ask_type, ask_age, ask_props, result, final_answer, back_answer
-from logic.variables import *
-from logic.admin import *
+from src.commands import *
+from src.payment import *
+from src.methods import *
+from src.questions import ask_location, ask_type, ask_age, ask_props, result, final_answer, back_answer
+from src.variables import *
+from src.admin import *
 
 
 def env():
@@ -30,7 +30,7 @@ env()
 
 load_dotenv()
 
-print("Modules import succesfull")
+print("srcs import succesfull")
 
 
 def main():

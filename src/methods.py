@@ -4,9 +4,9 @@ from random import randint
 from os import getcwd
 import logging
 
-from .etc import text
-from .database import DbInterface
-from .variables import *
+from src.etc import text
+from src.database import DbInterface
+from src.variables import *
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 #                     data[j] = i
 #                     game_id += db.getGames(*data)
 #         game_id = sorted(list(set(game_id)))
-    
+
 #     return game_id
 
 
