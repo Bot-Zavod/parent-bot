@@ -7,8 +7,8 @@ import base64
 import json
 import hashlib
 from src.commands import start
-from src.variables import *
-from src.etc import text
+from src.states import State
+from src.data import text
 from src.database import DB
 from urllib.parse import urlencode
 from urllib.request import urlopen

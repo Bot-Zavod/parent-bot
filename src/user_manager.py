@@ -4,7 +4,7 @@ from time import sleep, time
 import functools
 import threading
 
-from src.etc import text
+from src.data import text
 
 
 class UserManager:
@@ -37,7 +37,6 @@ class UserManager:
     def create_user(self, chat_id):
         self.currentUsers[chat_id] = User(chat_id)
 
-
     # Users stored in dictionary with keys as
     # Structure {
     #   user_id: User-class object
@@ -45,7 +44,7 @@ class UserManager:
 
 
 class User:
-    def __init__(self, chat_id, Location=None, Type=None, Age=None, Props=None, stage = 0):
+    def __init__(self, chat_id, Location=None, Type=None, Age=None, Props=None, stage=0):
         self.chat_id = chat_id
         self.Location = Location
         self.Type = Type
@@ -134,8 +133,3 @@ UM = UserManager()
 #     user.addQuestions([1,2,3,4,5])
 #     user.addAnswer(1, 0)
 #     print(user.answers)
-
-
-
-
-

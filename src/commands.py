@@ -5,8 +5,8 @@ import os
 import logging
 
 from src.database import DB
-from src.variables import *
-from src.etc import text
+from src.states import State
+from src.data import text
 
 
 logging.basicConfig(
@@ -39,7 +39,7 @@ def start(update, context):
             reply_keyboard, resize_keyboard=True)
         update.message.reply_text(
             text["start_games"], reply_markup=reply_markup)
-        return ASK_LOCATION
+        return State.ASK_LOCATION
     else:
         DB.save_id(chat_id)
         demo_button = InlineKeyboardButton(

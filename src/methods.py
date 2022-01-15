@@ -4,13 +4,13 @@ from random import randint
 from os import getcwd
 import logging
 
-from src.etc import text
+from src.data import text
 from src.database import DbInterface
-from src.variables import *
+from src.states import State
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 
 # def get_games_id(update,context):
@@ -34,11 +34,12 @@ logger = logging.getLogger(__name__)
 
 
 def start_query(update, context):
-    reply_keyboard = [[text["games"]],[text["random"]]]
+    reply_keyboard = [[text["games"]], [text["random"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(text["start_games"], reply_markup = markup)
-    return GAMES
+    update.message.reply_text(text["start_games"], reply_markup=markup)
+    return State.GAMES
 
-def back(update,context):
+
+def back(update, context):
     if update.message.text == text["back"]:
         return start_query(update, context)

@@ -7,8 +7,8 @@ import os
 from src.user_manager import UM
 from src.database import DB
 from src.commands import start
-from src.variables import *
-from src.etc import text, photos, emoji
+from src.states import State
+from src.data import text, photos, emoji
 
 
 def check(chat_id, update, context):
@@ -32,7 +32,7 @@ def ask_location(update, context):
                       [text["back"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["ask_location"], reply_markup=markup)
-    return ASK_TYPE
+    return State.ASK_TYPE
 
 
 def ask_type(update, context):
@@ -61,7 +61,7 @@ def ask_type(update, context):
         return ask_age(update, context)
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["ask_type"], reply_markup=markup)
-    return ASK_AGE
+    return State.ASK_AGE
 
 
 def ask_age(update, context):
@@ -92,7 +92,7 @@ def ask_age(update, context):
                       [text["back"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["ask_age"], reply_markup=markup)
-    return ASK_PROPS
+    return State.ASK_PROPS
 
 
 def ask_props(update, context):
@@ -116,7 +116,7 @@ def ask_props(update, context):
                       [text["back"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["ask_props"], reply_markup=markup)
-    return RESULT
+    return State.RESULT
 
 
 def result(update, context):
@@ -156,7 +156,7 @@ def result(update, context):
         map(lambda x: [x[0]+" "+choice(emoji)], reply_keys)) + [[text["menu"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text=answer, reply_markup=markup)
-    return ANSWER
+    return State.ANSWER
 
 
 def final_answer(update, context):
@@ -190,7 +190,7 @@ def final_answer(update, context):
         text=description.replace("<br>", "\n"),
         reply_markup=markup,
         parse_mode=ParseMode.HTML)
-    return BACK_ANSWER
+    return State.BACK_ANSWER
 
 
 def back_answer(update, context):

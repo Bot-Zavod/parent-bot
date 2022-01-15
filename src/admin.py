@@ -3,9 +3,9 @@ from datetime import datetime
 from os import getcwd, remove, environ
 
 
-from src.variables import *
+from src.states import State
 from src.database import DB
-from src.etc import text
+from src.data import text
 from src.commands import start
 from src.spreadsheet import update_games, update_users
 
@@ -43,7 +43,7 @@ def push_text(update, context):
         reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
     msg = text['options_admin']['push_submit'].format(answer=answer)
     update.message.reply_text(text=msg, reply_markup=markup)
-    return PUSH_SUBMIT
+    return State.PUSH_SUBMIT
 
 # push menu
 
@@ -54,7 +54,7 @@ def push_who(update, context):
 
     def push_text_direct(update, context):
         update.message.reply_text(text=text['options_admin']['push_text'])
-        return PUSH_WHAT
+        return State.PUSH_WHAT
 
     if answer == text['options_admin']['all_users']:
         return push_text_direct(update, context)
@@ -81,7 +81,7 @@ def admin_handler(update, context):
             reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
         update.message.reply_text(
             text=text['options_admin']['push_text_q'], reply_markup=markup)
-        return PUSH_WHO
+        return State.PUSH_WHO
     elif answer == text['options_admin']['db']:
         update_result = update_users()
         update.message.reply_text(
@@ -116,7 +116,7 @@ def admin(update, context):
         markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
         update.message.reply_text(
             text=text['options_admin']['hi_boss'], reply_markup=markup)
-        return ADMIN
+        return State.ADMIN
     else:
         context.bot.send_message(
             chat_id=update.effective_chat.id, text=text['options_admin']['not_boss'])

@@ -7,7 +7,7 @@ from src.commands import *
 from src.payment import *
 from src.methods import *
 from src.questions import ask_location, ask_type, ask_age, ask_props, result, final_answer, back_answer
-from src.variables import *
+from src.states import State
 from src.admin import *
 
 
@@ -61,18 +61,18 @@ def main():
         entry_points=[CommandHandler('start', start),
                       CommandHandler('admin', admin)],
         states={
-            ASK_LOCATION: [*necessary_hendlers, MessageHandler(Filters.text, ask_location)],
-            ASK_TYPE:     [*necessary_hendlers, MessageHandler(Filters.text, ask_type)],
-            ASK_AGE:      [*necessary_hendlers, MessageHandler(Filters.text, ask_age)],
-            ASK_PROPS:    [*necessary_hendlers, MessageHandler(Filters.text, ask_props)],
-            RESULT:       [*necessary_hendlers, MessageHandler(Filters.text, result)],
-            ANSWER:       [*necessary_hendlers, MessageHandler(Filters.text, final_answer)],
-            BACK_ANSWER:  [*necessary_hendlers, MessageHandler(Filters.text, back_answer)],
+            State.ASK_LOCATION: [*necessary_hendlers, MessageHandler(Filters.text, ask_location)],
+            State.ASK_TYPE:     [*necessary_hendlers, MessageHandler(Filters.text, ask_type)],
+            State.ASK_AGE:      [*necessary_hendlers, MessageHandler(Filters.text, ask_age)],
+            State.ASK_PROPS:    [*necessary_hendlers, MessageHandler(Filters.text, ask_props)],
+            State.RESULT:       [*necessary_hendlers, MessageHandler(Filters.text, result)],
+            State.ANSWER:       [*necessary_hendlers, MessageHandler(Filters.text, final_answer)],
+            State.BACK_ANSWER:  [*necessary_hendlers, MessageHandler(Filters.text, back_answer)],
 
-            ADMIN:        [*necessary_hendlers, MessageHandler(Filters.text, admin_handler)],
-            PUSH_WHO:     [*necessary_hendlers, MessageHandler(Filters.text, push_who)],
-            PUSH_WHAT:    [*necessary_hendlers, MessageHandler(Filters.text, push_text)],
-            PUSH_SUBMIT:  [*necessary_hendlers, MessageHandler(Filters.text, push_handler)],
+            State.ADMIN:        [*necessary_hendlers, MessageHandler(Filters.text, admin_handler)],
+            State.PUSH_WHO:     [*necessary_hendlers, MessageHandler(Filters.text, push_who)],
+            State.PUSH_WHAT:    [*necessary_hendlers, MessageHandler(Filters.text, push_text)],
+            State.PUSH_SUBMIT:  [*necessary_hendlers, MessageHandler(Filters.text, push_handler)],
 
 
         },
