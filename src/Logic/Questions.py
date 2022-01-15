@@ -179,7 +179,7 @@ def final_answer(update, context):
         return result(update, context)
 
     if game in photos.keys():
-        path = f"src/logic/img/{photos[game]}"
+        path = f"src/images/{photos[game]}"
         full_path = os.path.abspath(os.path.expanduser(
             os.path.expandvars(path)))
         update.message.reply_photo(photo=open(full_path, 'rb'), caption=game)

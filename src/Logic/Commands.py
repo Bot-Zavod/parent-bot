@@ -62,7 +62,7 @@ def demo(update, context):
         chat_id=update.callback_query.message.chat.id,
         message_id=update.callback_query.message.message_id,
     )
-    path = f"src/logic/img/demo.mp4"
+    path = f"src/images/demo.mp4"
     full_path = os.path.abspath(os.path.expanduser(
         os.path.expandvars(path)))
     context.bot.send_video(
