@@ -2,15 +2,18 @@ import os
 
 from telegram import ReplyKeyboardMarkup
 
-from bot.commands import start
+from bot.handlers.base import start
 from bot.data import text
 from bot.database import db_interface
-from bot.spreadsheet import update_games
-from bot.spreadsheet import update_users
+from bot.utils.spreadsheet import update_games
 from bot.states import State
 
 push_text_group = None
 push_text_notification = None  # for text that admin wants to send
+
+
+def update_users():
+    pass
 
 
 def push_handler(update, context):
@@ -31,10 +34,8 @@ def push_handler(update, context):
     return admin(update, context)
 
 
-# catches admin massage
-
-
 def push_text(update, context):
+    """catches admin massage"""
     global push_text_notification
     answer = update.message.text
     push_text_notification = answer
@@ -48,10 +49,8 @@ def push_text(update, context):
     return State.PUSH_SUBMIT
 
 
-# push menu
-
-
 def push_who(update, context):
+    """push menu"""
     global push_text_group
     answer = update.message.text
 
@@ -71,10 +70,8 @@ def push_who(update, context):
         return admin(update, context)
 
 
-# handle answer from admin menu
-
-
 def admin_handler(update, context):
+    """handle answer from admin menu"""
     answer = update.message.text
     if answer == text["options_admin"]["push"]:
         reply_keyboard = [
@@ -115,10 +112,8 @@ def admin_handler(update, context):
         return admin(update, context)
 
 
-# show up basic admin menu
-
-
 def admin_menu(update, context):
+    """show up basic admin menu"""
     # checks if you are a true admin
     if update.message.chat.username in os.getenv("ADMIN"):
         reply_keyboard = [

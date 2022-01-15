@@ -4,7 +4,7 @@ from random import choice
 from telegram import ParseMode
 from telegram import ReplyKeyboardMarkup
 
-from bot.commands import start
+from bot.handlers.base import start
 from bot.data import emoji
 from bot.data import photos
 from bot.data import text

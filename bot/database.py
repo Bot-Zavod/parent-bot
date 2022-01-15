@@ -1,6 +1,7 @@
 import os
 import sqlite3
-import time
+
+from loguru import logger
 
 
 class DbInterface:
@@ -66,7 +67,7 @@ class DbInterface:
             self.cursor.execute(sql)
             all_payed_user = self.cursor.fetchall()[0][0]
         except:
-            print(f"Check failed")
+            print("Check failed")
         finally:
             self.conn.commit()
 
@@ -75,7 +76,7 @@ class DbInterface:
     def get_users(self, group=None) -> list:
         """return chat_id list of passed user category"""
         sql = "SELECT chat_id FROM Users"
-        if group != None:
+        if group is not None:
             if group == "PAYED":
                 sql = "SELECT chat_id FROM Payments WHERE status!='unsubscribed'"
             elif group == "UNPAYED":
@@ -88,7 +89,7 @@ class DbInterface:
             else:
                 users = []
         except:
-            print(f"Check failed")
+            print("Check failed")
         finally:
             self.conn.commit()
         return users
@@ -150,25 +151,25 @@ class DbInterface:
             print(f"Your game {game} does not exist or some other shit happened")
         finally:
             self.conn.commit()
-            return data
+        return data
 
 
-def start_database():
+def start_database() -> DbInterface:
     """setting up the database"""
-    database = "database.db"
+    database = "db.sqlite3"
     # if no db file -> create one
     if not os.path.exists(database):
-        print("no database found")
+        logger.error(f"No database '{database}' found")
         create_path = os.path.abspath(os.getcwd())
         create_path = os.path.join(create_path, database)
-        print(f"create_path: {create_path}")
-        f = open(create_path, "x")
-        f.close()
+        logger.info(f"Create path: {create_path}")
+        file = open(create_path, "x")
+        file.close()
     else:
-        print("Database exist")
+        logger.info(f"Database '{database}' exist")
     full_path = os.path.abspath(os.path.expanduser(os.path.expandvars(database)))
-    db_interface = DbInterface(full_path)
-    return db_interface
+    interface = DbInterface(full_path)
+    return interface
 
 
 db_interface = start_database()

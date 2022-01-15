@@ -1,3 +1,26 @@
+from telegram.ext import CommandHandler
+from telegram.ext import ConversationHandler
+from telegram.ext import Filters
+from telegram.ext import MessageHandler
+
+from bot.handlers.admin import admin_handler
+from bot.handlers.admin import admin_menu
+from bot.handlers.admin import push_handler
+from bot.handlers.admin import push_text
+from bot.handlers.admin import push_who
+from bot.handlers.base import start
+from bot.handlers.base import stop_bot
+from bot.handlers.questions import ask_age
+from bot.handlers.questions import ask_location
+from bot.handlers.questions import ask_props
+from bot.handlers.questions import ask_type
+from bot.handlers.questions import back_answer
+from bot.handlers.questions import final_answer
+from bot.handlers.questions import result
+from bot.states import State
+from bot.utils.methods import *
+
+
 must_commands = [
     CommandHandler("start", start),
     CommandHandler("stop", stop_bot),
@@ -22,7 +45,7 @@ for key, value in states.items():
     states[key] = must_commands + value
 
 conv_handler = ConversationHandler(
-    entry_points=[CommandHandler("start", start), CommandHandler("admin", admin)],
+    entry_points=[CommandHandler("start", start), CommandHandler("admin", admin_menu)],
     states=states,
     fallbacks=[CommandHandler("stop", stop_bot)],
 )

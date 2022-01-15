@@ -1,31 +1,19 @@
 import os
 
 from dotenv import load_dotenv
-from telegram.ext import CallbackQueryHandler
-from telegram.ext import CommandHandler
-from telegram.ext import ConversationHandler
-from telegram.ext import Filters
-from telegram.ext import MessageHandler
-from telegram.ext import Updater
 from loguru import logger
+from telegram import Bot
+from telegram import ParseMode
+from telegram.ext import CommandHandler
+from telegram.ext import Defaults
+from telegram.ext import PicklePersistence
+from telegram.ext import Updater
 
-from bot.admin import admin_handler
-from bot.admin import admin_menu
-from bot.admin import push_handler
-from bot.admin import push_text
-from bot.admin import push_who
-from bot.commands import start
-from bot.commands import stop_bot
-from bot.methods import *
-from bot.questions import ask_age
-from bot.questions import ask_location
-from bot.questions import ask_props
-from bot.questions import ask_type
-from bot.questions import back_answer
-from bot.questions import final_answer
-from bot.questions import result
-from bot.states import State
+from bot.commands import clear_bot
+from bot.commands import set_bot_commands
 from bot.conv_handler import conv_handler
+from bot.handlers.base import terms
+from bot.utils.methods import *
 
 
 logger.add(
@@ -54,10 +42,20 @@ def setup_bot(bot_token: str):
 
 
 def main():
+    bot_token = os.getenv("BOT_TOKEN")
+    setup_bot(bot_token)
+    main_dir = os.path.dirname(os.path.dirname(__file__))
+    storage_path = os.path.join(main_dir, "storage.pickle")
+    my_persistence = PicklePersistence(filename=storage_path)
+    defaults = Defaults(parse_mode=ParseMode.HTML)
 
-    token = os.getenv("BOT_TOKEN")
-    setup_bot(token)
-    updater = Updater(token, use_context=True)
+    updater = Updater(
+        token=bot_token,
+        persistence=my_persistence,
+        use_context=True,
+        defaults=defaults,
+        workers=6,
+    )
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
