@@ -1,7 +1,5 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-.vscode/
-Pandemia parser-751d2a06ae54.json
 *.py[cod]
 *$py.class
 
@@ -129,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.vscode/
+google_api.json
+.DS_store

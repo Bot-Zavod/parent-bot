@@ -3,19 +3,18 @@ from random import choice
 
 from telegram import ParseMode
 from telegram import ReplyKeyboardMarkup
-from telegram import ReplyKeyboardRemove
 
-from src.commands import start
-from src.data import emoji
-from src.data import photos
-from src.data import text
-from src.database import DB
-from src.states import State
-from src.user_manager import UM
+from bot.commands import start
+from bot.data import emoji
+from bot.data import photos
+from bot.data import text
+from bot.database import db_interface
+from bot.states import State
+from bot.user_manager import UM
 
 
 def check(chat_id, update, context):
-    if chat_id not in UM.currentUsers:
+    if chat_id not in UM.current_users:
         return start(update, context)
 
 
@@ -46,9 +45,9 @@ def ask_type(update, context):
     check(chat_id, update, context)
 
     if massage in (text["inside"], text["outside"], text["trip"]):
-        UM.currentUsers[chat_id].add_location(massage, 1)
+        UM.current_users[chat_id].add_location(massage, 1)
     elif massage == text["back"]:
-        if UM.currentUsers[chat_id].stage == 0:
+        if UM.current_users[chat_id].stage == 0:
             UM.delete_user(update.message.chat.id)
             return start(update, context)
     else:
@@ -83,10 +82,10 @@ def ask_age(update, context):
         text["family"],
         text["task"],
     ):
-        UM.currentUsers[chat_id].add_type(massage, 2)
+        UM.current_users[chat_id].add_type(massage, 2)
     elif massage == text["back"]:
-        if UM.currentUsers[chat_id].stage == 1:
-            UM.currentUsers[chat_id].stage = 0
+        if UM.current_users[chat_id].stage == 1:
+            UM.current_users[chat_id].stage = 0
             return ask_location(update, context)
     elif massage == text["trip"]:
         pass
@@ -94,7 +93,7 @@ def ask_age(update, context):
         return ask_location(update, context)
 
     if massage == text["family"]:
-        print(UM.currentUsers[chat_id])
+        print(UM.current_users[chat_id])
         return ask_props(update, context)
 
     reply_keyboard = [
@@ -115,12 +114,12 @@ def ask_props(update, context):
     check(chat_id, update, context)
 
     if massage in (text["2-3"], text["3-4"], text["4-6"], text["6-8"]):
-        UM.currentUsers[chat_id].add_age(massage, 3)
+        UM.current_users[chat_id].add_age(massage, 3)
     elif massage == text["family"]:
         pass
     elif massage == text["back"]:
-        if UM.currentUsers[chat_id].stage == 2:
-            UM.currentUsers[chat_id].stage = 1
+        if UM.current_users[chat_id].stage == 2:
+            UM.current_users[chat_id].stage = 1
             return ask_type(update, context)
     else:
         return ask_type(update, context)
@@ -137,27 +136,27 @@ def result(update, context):
     # check(chat_id, update, context)
 
     if massage in (text["yes"], text["no"]):
-        UM.currentUsers[chat_id].add_props(massage, 4)
+        UM.current_users[chat_id].add_props(massage, 4)
     elif massage == text["back"]:
-        if UM.currentUsers[chat_id].stage == 3:
-            UM.currentUsers[chat_id].stage = 2
+        if UM.current_users[chat_id].stage == 3:
+            UM.current_users[chat_id].stage = 2
             return ask_age(update, context)
-        elif UM.currentUsers[chat_id].stage == 1:
-            UM.currentUsers[chat_id].stage = 0
+        elif UM.current_users[chat_id].stage == 1:
+            UM.current_users[chat_id].stage = 0
             return ask_type(update, context)
-        elif UM.currentUsers[chat_id].stage == 2:
+        elif UM.current_users[chat_id].stage == 2:
             return ask_age(update, context)
     else:
         return ask_age(update, context)
 
-    print(UM.currentUsers[chat_id])
-    if UM.currentUsers[chat_id].games == None:
-        user_data = UM.currentUsers[chat_id].get_data()
-        user_games = DB.get_games(*user_data)
+    print(UM.current_users[chat_id])
+    if UM.current_users[chat_id].games == None:
+        user_data = UM.current_users[chat_id].get_data()
+        user_games = db_interface.get_games(*user_data)
         reply_keys = [[name[0]] for name in user_games]
-        UM.currentUsers[chat_id].add_games(reply_keys[:])
+        UM.current_users[chat_id].add_games(reply_keys[:])
     else:
-        reply_keys = UM.currentUsers[chat_id].games
+        reply_keys = UM.current_users[chat_id].games
 
     if reply_keys == None:
         answer = text["no_result"]
@@ -180,21 +179,20 @@ def final_answer(update, context):
     if massage == text["menu"]:
         UM.delete_user(chat_id)
         return start(update, context)
-    UM.currentUsers[chat_id].stage = 5
+    UM.current_users[chat_id].stage = 5
 
-    # print(UM.currentUsers[chat_id].games)
+    # print(UM.current_users[chat_id].games)
     game = massage[:-2].strip()
-    if [game] in UM.currentUsers[chat_id].games:
-        description = DB.get_game(game)
+    if [game] in UM.current_users[chat_id].games:
+        description = db_interface.get_game(game)
         # print(description)
     else:
         print(f"\n{game}\n")
         return result(update, context)
 
     if game in photos.keys():
-        path = f"src/images/{photos[game]}"
-        full_path = os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
-        update.message.reply_photo(photo=open(full_path, "rb"), caption=game)
+        img_path = os.path.join("images", photos[game])
+        update.message.reply_photo(photo=open(img_path, "rb"), caption=game)
 
     reply_keyboard = [[text["back"], text["menu"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)

@@ -1,17 +1,13 @@
-from datetime import datetime
-from os import environ
-from os import getcwd
-from os import remove
+import os
 
 from telegram import ReplyKeyboardMarkup
-from telegram import ReplyKeyboardRemove
 
-from src.commands import start
-from src.data import text
-from src.database import DB
-from src.spreadsheet import update_games
-from src.spreadsheet import update_users
-from src.states import State
+from bot.commands import start
+from bot.data import text
+from bot.database import db_interface
+from bot.spreadsheet import update_games
+from bot.spreadsheet import update_users
+from bot.states import State
 
 push_text_group = None
 push_text_notification = None  # for text that admin wants to send
@@ -25,7 +21,7 @@ def push_handler(update, context):
     global push_text_notification
     global push_text_group
     # sending the notification message
-    users_ids = DB.get_users(push_text_group)
+    users_ids = db_interface.get_users(push_text_group)
     for z in users_ids:
         context.bot.send_message(chat_id=z, text=push_text_notification)
     user_number = len(users_ids)
@@ -105,7 +101,7 @@ def admin_handler(update, context):
         update.message.reply_text(text=update_result)
         return admin(update, context)
     elif answer == text["options_admin"]["users"]:
-        users_count = DB.users_count()
+        users_count = db_interface.users_count()
         msg = (
             f"Воспользовались: {users_count[0]}\n"
             + f"Подписались: {users_count[1]}\n"
@@ -122,9 +118,9 @@ def admin_handler(update, context):
 # show up basic admin menu
 
 
-def admin(update, context):
+def admin_menu(update, context):
     # checks if you are a true admin
-    if update.message.chat.username in environ["ADMIN"]:
+    if update.message.chat.username in os.getenv("ADMIN"):
         reply_keyboard = [
             [text["options_admin"]["push"], text["options_admin"]["users"]],
             [text["options_admin"]["db"], text["options_admin"]["update_games"]],

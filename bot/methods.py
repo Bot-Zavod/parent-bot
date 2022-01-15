@@ -1,14 +1,9 @@
 import logging
-from os import getcwd
-from random import randint
 
 from telegram import ReplyKeyboardMarkup
-from telegram import ReplyKeyboardRemove
-from telegram.ext import ConversationHandler
 
-from src.data import text
-from src.database import DbInterface
-from src.states import State
+from bot.data import text
+from bot.states import State
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -19,7 +14,7 @@ logger = logging.getLogger(__name__)
 # def get_games_id(update,context):
 # 	db = DbInterface(getcwd() + "/database.db")
 # 	UM = UserManager()
-#     # answer = UM.currentUsers[update.message.chat.id]
+#     # answer = UM.current_users[update.message.chat.id]
 #     game_id = []
 #     game_id += db.getGames(answer[0],answer[1],answer[2],answer[3],answer[4])
 
