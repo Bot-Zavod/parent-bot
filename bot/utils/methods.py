@@ -1,8 +1,9 @@
 from telegram import ReplyKeyboardMarkup
+from telegram import Update
+from telegram.ext import CallbackContext
 
 from bot.data import text
 from bot.states import State
-
 
 # def get_games_id(update,context):
 # 	db = DbInterface(getcwd() + "/database.db")
@@ -24,13 +25,8 @@ from bot.states import State
 #     return game_id
 
 
-def start_query(update, context):
+def start_query(update: Update, context: CallbackContext):
     reply_keyboard = [[text["games"]], [text["random"]]]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["start_games"], reply_markup=markup)
     return State.GAMES
-
-
-def back(update, context):
-    if update.message.text == text["back"]:
-        return start_query(update, context)

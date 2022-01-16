@@ -31,17 +31,14 @@ def get_spreadsheet() -> Spreadsheet:
 
 
 # update Games database from Content spreadsheet
-def update_games():
+def update_games() -> int:
     sheet = get_spreadsheet()
     games = sheet.get_all_values()
     games_num = len(games)
-    try:
-        db_interface.delete_games()
-        games_to_insert = [[game[-1].strip()] + game[:5] for game in games]
-        db_interface.set_games(games_to_insert)
-    except Exception as e:
-        return "Failed with " + str(e)
-    return f"Games database was succesfully updated with {games_num} games"
+    db_interface.delete_games()
+    games_to_insert = [[game[-1].strip()] + game[:5] for game in games]
+    db_interface.set_games(games_to_insert)
+    return games_num
 
 
 if __name__ == "__main__":

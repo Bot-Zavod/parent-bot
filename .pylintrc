@@ -23,6 +23,7 @@ disable=import-error,
         missing-function-docstring,
         missing-module-docstring,
         missing-class-docstring,
+        global-statement,
 
 [DESIGN]
 max-attributes=12

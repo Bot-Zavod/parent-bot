@@ -1,24 +1,33 @@
 import os
+from functools import wraps
 from random import choice
 
 from telegram import ParseMode
 from telegram import ReplyKeyboardMarkup
+from telegram import Update
+from telegram.ext import CallbackContext
 
-from bot.handlers.base import start
 from bot.data import emoji
 from bot.data import photos
 from bot.data import text
 from bot.database import db_interface
+from bot.handlers.base import start
 from bot.states import State
 from bot.user_manager import UM
 
 
-def check(chat_id, update, context):
-    if chat_id not in UM.current_users:
-        return start(update, context)
+def check_state(func):
+    @wraps(func)
+    def wrapper(update: Update, context: CallbackContext):
+        chat_id = update.message.chat.id
+        if chat_id not in UM.current_users:
+            return start(update, context)
+        return func(update, context)
+
+    return wrapper
 
 
-def ask_location(update, context):
+def ask_location(update: Update, context: CallbackContext):
     massage = update.message.text
     if massage == text["games"]:
         UM.create_user(update.message.chat.id)
@@ -39,10 +48,10 @@ def ask_location(update, context):
     return State.ASK_TYPE
 
 
-def ask_type(update, context):
+@check_state
+def ask_type(update: Update, context: CallbackContext):
     massage = update.message.text
     chat_id = update.message.chat.id
-    check(chat_id, update, context)
 
     if massage in (text["inside"], text["outside"], text["trip"]):
         UM.current_users[chat_id].add_location(massage, 1)
@@ -70,10 +79,10 @@ def ask_type(update, context):
     return State.ASK_AGE
 
 
-def ask_age(update, context):
+@check_state
+def ask_age(update: Update, context: CallbackContext):
     massage = update.message.text
     chat_id = update.message.chat.id
-    check(chat_id, update, context)
 
     if massage in (
         text["active"],
@@ -108,10 +117,10 @@ def ask_age(update, context):
     return State.ASK_PROPS
 
 
-def ask_props(update, context):
+@check_state
+def ask_props(update: Update, context: CallbackContext):
     massage = update.message.text
     chat_id = update.message.chat.id
-    check(chat_id, update, context)
 
     if massage in (text["2-3"], text["3-4"], text["4-6"], text["6-8"]):
         UM.current_users[chat_id].add_age(massage, 3)
@@ -130,14 +139,16 @@ def ask_props(update, context):
     return State.RESULT
 
 
-def result(update, context):
+def result(update: Update, context: CallbackContext):
     massage = update.message.text
     chat_id = update.message.chat.id
-    # check(chat_id, update, context)
+
+    if massage not in (text["yes"], text["no"], text["back"]):
+        return ask_age(update, context)
 
     if massage in (text["yes"], text["no"]):
         UM.current_users[chat_id].add_props(massage, 4)
-    elif massage == text["back"]:
+    else:
         if UM.current_users[chat_id].stage == 3:
             UM.current_users[chat_id].stage = 2
             return ask_age(update, context)
@@ -146,11 +157,9 @@ def result(update, context):
             return ask_type(update, context)
         elif UM.current_users[chat_id].stage == 2:
             return ask_age(update, context)
-    else:
-        return ask_age(update, context)
 
     print(UM.current_users[chat_id])
-    if UM.current_users[chat_id].games == None:
+    if UM.current_users[chat_id].games is None:
         user_data = UM.current_users[chat_id].get_data()
         user_games = db_interface.get_games(*user_data)
         reply_keys = [[name[0]] for name in user_games]
@@ -158,7 +167,7 @@ def result(update, context):
     else:
         reply_keys = UM.current_users[chat_id].games
 
-    if reply_keys == None:
+    if reply_keys is None:
         answer = text["no_result"]
     else:
         answer = text["result"]
@@ -171,10 +180,9 @@ def result(update, context):
     return State.ANSWER
 
 
-def final_answer(update, context):
+def final_answer(update: Update, context: CallbackContext):
     massage = update.message.text
     chat_id = update.message.chat.id
-    # check(chat_id, update, context)
 
     if massage == text["menu"]:
         UM.delete_user(chat_id)
@@ -204,7 +212,7 @@ def final_answer(update, context):
     return State.BACK_ANSWER
 
 
-def back_answer(update, context):
+def back_answer(update: Update, context: CallbackContext):
     massage = update.message.text
     chat_id = update.message.chat.id
     if massage == text["back"]:

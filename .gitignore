@@ -131,3 +131,4 @@ dmypy.json
 .vscode/
 google_api.json
 .DS_store
+storage.pickle

@@ -16,7 +16,7 @@ def clear_bot(bot: Bot):
 
 all_commands = [
     ("start", "Start bot 🚀"),
-    ("language", "Set language 🏴‍☠️"),
+    ("info", "Information ℹ️"),
     ("stop", "Stop bot 🚫"),
 ]
 

@@ -1,14 +1,18 @@
+import contextlib
 import os
 import sqlite3
+from typing import List
+from typing import Optional
 
 from loguru import logger
 
 
 class DbInterface:
-    def __init__(self, path):
-        self.conn = sqlite3.connect(path, check_same_thread=False)
-        self.cursor = self.conn.cursor()
+    def __init__(self, path: str):
+        self.db_path = path
+        self.create_tables()
 
+    def create_tables(self) -> None:
         sql_tables = [
             # Games table
             """
@@ -28,98 +32,77 @@ class DbInterface:
         ]
 
         for sql in sql_tables:
-            self.cursor.execute(sql)
-            self.conn.commit()
+            self.query([sql])
+
+    def query(
+        self,
+        statement: list,
+        fetch: bool = False,
+        executemany: bool = False,
+    ) -> Optional[list]:
+        data = None
+        try:
+            with contextlib.closing(
+                sqlite3.connect(self.db_path, check_same_thread=False)
+            ) as conn:  # auto-closes
+                with conn:  # auto-commits
+                    with contextlib.closing(conn.cursor()) as cursor:  # auto-closes
+                        if executemany:
+                            cursor.executemany(*statement)
+                        else:
+                            cursor.execute(*statement)
+                        if fetch:
+                            data = cursor.fetchall()
+        except Exception as error:
+            sql = statement[0]
+            args = statement[1] if len(statement) == 2 else []
+            logger.error(
+                f"Failed to execute '{sql}' with args '{args}' because of exception:\n{error}"
+            )
+            raise Exception from error
+        return data
+
+    # ==========
+    # USERS
+    # ==========
 
     def save_id(self, chat_id) -> None:
         """save id to Users"""
         sql = "INSERT OR IGNORE INTO Users (chat_id) values(?)"
         args = [chat_id]
-        try:
-            self.cursor.execute(sql, args)
-        except Exception as error:
-            print(f"Saving {chat_id} failed, error: {error}")
-        finally:
-            self.conn.commit()
+        self.query([sql, args])
 
-    def users_count(self) -> list:
-        """return number of [visitors, subscribed, unsubscribed]"""
+    def users_count(self) -> int:
+        """return number of visitors"""
         sql = "SELECT COUNT(*) FROM Users"
-        try:
-            self.cursor.execute(sql)
-            all_user = self.cursor.fetchall()[0][0]
-        except Exception as error:
-            print(f"Check failed, error: {error}")
-        finally:
-            self.conn.commit()
+        users = self.query([sql], fetch=True)
+        users_count = users[0][0]  # type: ignore
+        return users_count
 
-        sql = "SELECT COUNT(*) FROM Payments WHERE status!='unsubscribed'"
-        try:
-            self.cursor.execute(sql)
-            payed_user = self.cursor.fetchall()[0][0]
-        except Exception as error:
-            print(f"Check failed, error: {error}")
-        finally:
-            self.conn.commit()
-
-        sql = "SELECT COUNT(*) FROM Payments"
-        try:
-            self.cursor.execute(sql)
-            all_payed_user = self.cursor.fetchall()[0][0]
-        except:
-            print("Check failed")
-        finally:
-            self.conn.commit()
-
-        return [all_user, payed_user, all_payed_user - payed_user]
-
-    def get_users(self, group=None) -> list:
+    def get_users(self) -> list:
         """return chat_id list of passed user category"""
         sql = "SELECT chat_id FROM Users"
-        if group is not None:
-            if group == "PAYED":
-                sql = "SELECT chat_id FROM Payments WHERE status!='unsubscribed'"
-            elif group == "UNPAYED":
-                sql = "SELECT chat_id FROM Payments WHERE status='unsubscribed'"
-        try:
-            self.cursor.execute(sql)
-            answer = self.cursor.fetchall()
-            if answer != []:
-                users = answer[0]
-            else:
-                users = []
-        except:
-            print("Check failed")
-        finally:
-            self.conn.commit()
+        answer = self.query([sql], fetch=True)
+        users = answer[0]  # type: ignore
         return users
 
-    # ================
-    # GAMES SECTION
-    # =================
+    # ===========
+    # GAMES
+    # ===========
 
-    def delete_games(self):
+    def delete_games(self) -> None:
         """cleans games table before update"""
         sql = "DELETE FROM Games"
-        try:
-            self.cursor.execute(sql)
-        except Exception as e:
-            print(f" Delete shit happened {e}")
-        finally:
-            self.conn.commit()
-        return "Delete done"
+        self.query([sql])
 
-    def set_games(self, games_to_insert):
+    def set_games(self, games_to_insert: List[list]) -> None:
         """insert multiple games to the database at once"""
         sql = "INSERT INTO Games (Name, description, location, game_type, age, props) VALUES (?,?,?,?,?,?)"
-        try:
-            self.cursor.executemany(sql, games_to_insert)
-        except Exception as e:
-            print(f"ERROR while inserting {e}")
-        finally:
-            self.conn.commit()
+        self.query([sql, games_to_insert], executemany=True)
 
-    def get_games(self, location=None, game_type=None, age=None, props=None):
+    def get_games(
+        self, location=None, game_type=None, age=None, props=None
+    ) -> Optional[list]:
         """return all games+name that sutisfy the qequirments"""
         sql = "SELECT Name, description FROM Games WHERE "
         sql += f"(location LIKE '%{location}%' OR location=\"\")"
@@ -129,28 +112,16 @@ class DbInterface:
             sql += f"AND (game_type LIKE '%{game_type}%' OR game_type=\"\")"
         if props is not None:
             sql += f"AND (props LIKE '%{props}%' OR props=\"\")"
-        data = []
-        try:
-            self.cursor.execute(sql)  # , args)
-            data = self.cursor.fetchall()
-        except:
-            print(f"Your request {location, age, game_type, props} failed")
-        finally:
-            self.conn.commit()
+
+        data = self.query([sql], fetch=True)
         return data
 
     def get_game(self, game: str) -> str:
         """return game with a passed name"""
         sql = "SELECT description FROM Games WHERE Name = (?)"
         args = [game]
-        data = ""
-        try:
-            self.cursor.execute(sql, args)
-            data = self.cursor.fetchall()[0][0]
-        except:
-            print(f"Your game {game} does not exist or some other shit happened")
-        finally:
-            self.conn.commit()
+        game = self.query([sql, args], fetch=True)  # type: ignore
+        data = game[0][0]
         return data
 
 
@@ -159,7 +130,7 @@ def start_database() -> DbInterface:
     database = "db.sqlite3"
     # if no db file -> create one
     if not os.path.exists(database):
-        logger.error(f"No database '{database}' found")
+        logger.info(f"No database '{database}' found")
         create_path = os.path.abspath(os.getcwd())
         create_path = os.path.join(create_path, database)
         logger.info(f"Create path: {create_path}")
@@ -175,9 +146,7 @@ def start_database() -> DbInterface:
 db_interface = start_database()
 
 if __name__ == "__main__":
-    print(db_interface.get_users())
-    print(db_interface.get_users("PAYED"))
-    print(db_interface.get_users("UNPAYED"))
-
     # db_interface.add_user(383327735, 'alexeymarkovski', 'Alexey', 'Markovski', '380952793306')
-    # print(db_interface.check_payed_user(383327735)
+    # users = db_interface.get_users()
+    # print(users)
+    pass
