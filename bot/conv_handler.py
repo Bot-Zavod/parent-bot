@@ -13,12 +13,15 @@ from bot.handlers.admin import update_games_tables
 from bot.handlers.base import start
 from bot.handlers.base import stop_bot
 from bot.handlers.questions import ask_age
+from bot.handlers.questions import ask_games
 from bot.handlers.questions import ask_location
 from bot.handlers.questions import ask_props
 from bot.handlers.questions import ask_type
-from bot.handlers.questions import back_answer
-from bot.handlers.questions import final_answer
-from bot.handlers.questions import result
+from bot.handlers.questions import get_age
+from bot.handlers.questions import get_games
+from bot.handlers.questions import get_location
+from bot.handlers.questions import get_props
+from bot.handlers.questions import get_type
 from bot.states import State
 from bot.utils.methods import *
 
@@ -30,27 +33,59 @@ must_commands = [
 ]
 
 states = {
-    State.ASK_LOCATION: [MessageHandler(Filters.text, ask_location)],
-    State.ASK_TYPE: [MessageHandler(Filters.text, ask_type)],
-    State.ASK_AGE: [MessageHandler(Filters.text, ask_age)],
-    State.ASK_PROPS: [MessageHandler(Filters.text, ask_props)],
-    State.RESULT: [MessageHandler(Filters.text, result)],
-    State.ANSWER: [MessageHandler(Filters.text, final_answer)],
-    State.BACK_ANSWER: [MessageHandler(Filters.text, back_answer)],
-    State.ADMIN: [
-        MessageHandler(Filters.text([text["options_admin"]["push"]]), ask_push_text),
+    State.MENU: [MessageHandler(Filters.text([text["games"]]), ask_location)],
+    State.GET_LOCATION: [
+        MessageHandler(Filters.text([text["inside"], text["outside"]]), get_location),
+        MessageHandler(Filters.text([text["trip"]]), ask_age),  # skip type
+        MessageHandler(Filters.text([text["back"]]), start),
+    ],
+    State.GET_TYPE: [
         MessageHandler(
-            Filters.text([text["options_admin"]["update_games"]]), update_games_tables
+            Filters.text(
+                [
+                    text["active"],
+                    text["educational"],
+                    text["calming"],
+                    text["family"],
+                    text["task"],
+                ]
+            ),
+            get_type,
         ),
-        MessageHandler(Filters.text([text["options_admin"]["users"]]), list_users),
+        MessageHandler(Filters.text([text["back"]]), ask_location),
+    ],
+    State.GET_AGE: [
+        MessageHandler(
+            Filters.text([text["2-3"], text["3-4"], text["4-6"], text["6-8"]]), get_age
+        ),
+        MessageHandler(Filters.text([text["back"]]), ask_type),
+    ],
+    State.GET_PROPS: [
+        MessageHandler(Filters.text([text["yes"]], [text["no"]]), get_props),
+        MessageHandler(Filters.text([text["back"]]), ask_age),
+    ],
+    State.GET_GAME: [
+        MessageHandler(Filters.text([text["back"]]), ask_props),
+        MessageHandler(Filters.text([text["menu"]]), start),
+        MessageHandler(Filters.text, get_games),
+    ],
+    State.BACK_ANSWER: [
+        MessageHandler(Filters.text([text["back"]]), ask_games),
+        MessageHandler(Filters.text([text["menu"]]), start),
+    ],
+    # =======================================================
+    # ADMIN
+    # =======================================================
+    State.ADMIN: [
+        MessageHandler(Filters.text([text["push"]]), ask_push_text),
+        MessageHandler(Filters.text([text["update_games"]]), update_games_tables),
+        MessageHandler(Filters.text([text["users"]]), list_users),
         MessageHandler(Filters.text([text["back"]]), start),
     ],
     State.PUSH_WHAT: [MessageHandler(Filters.text, set_push_text)],
     State.PUSH_SUBMIT: [
         MessageHandler(
-            Filters.text(
-                [text["options_admin"]["send"], text["options_admin"]["no_send"]]
-            ),
+            Filters.text([text["send"], text["no_send"]]),
             push_handler,
         )
     ],

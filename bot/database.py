@@ -6,6 +6,8 @@ from typing import Optional
 
 from loguru import logger
 
+from bot.user_manager import UserQuery
+
 
 class DbInterface:
     def __init__(self, path: str):
@@ -100,18 +102,16 @@ class DbInterface:
         sql = "INSERT INTO Games (Name, description, location, game_type, age, props) VALUES (?,?,?,?,?,?)"
         self.query([sql, games_to_insert], executemany=True)
 
-    def get_games(
-        self, location=None, game_type=None, age=None, props=None
-    ) -> Optional[list]:
+    def get_games(self, user_query: UserQuery) -> Optional[list]:
         """return all games+name that sutisfy the qequirments"""
         sql = "SELECT Name, description FROM Games WHERE "
-        sql += f"(location LIKE '%{location}%' OR location=\"\")"
-        if age is not None:
-            sql += f"AND (age LIKE '%{age}%' OR age=\"\")"
-        if game_type is not None:
-            sql += f"AND (game_type LIKE '%{game_type}%' OR game_type=\"\")"
-        if props is not None:
-            sql += f"AND (props LIKE '%{props}%' OR props=\"\")"
+        sql += f"(location LIKE '%{user_query.location}%' OR location=\"\")"
+        if user_query.age is not None:
+            sql += f"AND (age LIKE '%{user_query.age}%' OR age=\"\")"
+        if user_query.game_type is not None:
+            sql += f"AND (game_type LIKE '%{user_query.game_type}%' OR game_type=\"\")"
+        if user_query.props is not None:
+            sql += f"AND (props LIKE '%{user_query.props}%' OR props=\"\")"
 
         data = self.query([sql], fetch=True)
         return data

@@ -6,6 +6,7 @@ from telegram.ext import ConversationHandler
 from bot.data import text
 from bot.database import db_interface
 from bot.states import State
+from bot.user_manager import user_manager
 from bot.utils.log import log_message
 
 
@@ -13,10 +14,11 @@ def start(update: Update, context: CallbackContext):
     log_message(update)
     chat_id = update.message.chat.id
     db_interface.save_id(chat_id)
+    user_manager.delete_user(update.message.chat.id)
     reply_keyboard = [[text["games"]]]
     reply_markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     update.message.reply_text(text["start_games"], reply_markup=reply_markup)
-    return State.ASK_LOCATION
+    return State.MENU
 
 
 def stop_bot(update: Update, context: CallbackContext):

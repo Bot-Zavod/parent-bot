@@ -1,8 +1,9 @@
 import os
 from functools import wraps
 from random import choice
+from typing import List
+from typing import Tuple
 
-from telegram import ParseMode
 from telegram import ReplyKeyboardMarkup
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -13,210 +14,154 @@ from bot.data import text
 from bot.database import db_interface
 from bot.handlers.base import start
 from bot.states import State
-from bot.user_manager import UM
+from bot.user_manager import user_manager
+from bot.utils.log import log_message
 
 
 def check_state(func):
     @wraps(func)
     def wrapper(update: Update, context: CallbackContext):
         chat_id = update.message.chat.id
-        if chat_id not in UM.current_users:
+        if chat_id not in user_manager.current_users:
             return start(update, context)
         return func(update, context)
 
     return wrapper
 
 
-def ask_location(update: Update, context: CallbackContext):
-    massage = update.message.text
-    if massage == text["games"]:
-        UM.create_user(update.message.chat.id)
-    elif massage == text["back"]:
-        pass
-    else:
-        UM.delete_user(update.message.chat.id)
-        return start(update, context)
+def send_message_with_keyboard(msg: str, keyboard: list, update: Update):
+    markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    update.message.reply_text(text=msg, reply_markup=markup)
 
-    reply_keyboard = [
+
+def get_id_msg(update: Update) -> Tuple[int, str]:
+    chat_id = update.message.chat.id
+    massage = update.message.text
+    return chat_id, massage
+
+
+def ask_location(update: Update, context: CallbackContext):
+    log_message(update)
+    chat_id = update.message.chat.id
+    user_manager.create_user(chat_id)
+    keyboard = [
         [text["inside"]],
         [text["outside"]],
         [text["trip"]],
         [text["back"]],
     ]
-    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(text["ask_location"], reply_markup=markup)
-    return State.ASK_TYPE
+    send_message_with_keyboard(text["ask_location"], keyboard, update)
+    return State.GET_LOCATION
 
 
 @check_state
+def get_location(update: Update, context: CallbackContext):
+    log_message(update)
+    chat_id, massage = get_id_msg(update)
+    user_manager.current_users[chat_id].add_location(massage)
+    return ask_type(update, context)
+
+
 def ask_type(update: Update, context: CallbackContext):
-    massage = update.message.text
-    chat_id = update.message.chat.id
-
-    if massage in (text["inside"], text["outside"], text["trip"]):
-        UM.current_users[chat_id].add_location(massage, 1)
-    elif massage == text["back"]:
-        if UM.current_users[chat_id].stage == 0:
-            UM.delete_user(update.message.chat.id)
-            return start(update, context)
-    else:
-        return start(update, context)
-
-    reply_keyboard = [
-        [text["active"]],
-        [text["educational"]],
+    log_message(update)
+    keyboard = [
+        [text["active"], text["educational"]],
         [text["calming"]],
-        [text["family"]],
-        [text["task"]],
+        [text["family"], text["task"]],
         [text["back"]],
     ]
-    if massage == text["outside"]:
-        reply_keyboard = reply_keyboard[:3] + [reply_keyboard[-1]]
-    elif massage == text["trip"]:
-        return ask_age(update, context)
-    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(text["ask_type"], reply_markup=markup)
-    return State.ASK_AGE
+    if update.message.text == text["outside"]:
+        keyboard.pop(2)  # skip family and task
+
+    send_message_with_keyboard(text["ask_type"], keyboard, update)
+    return State.GET_TYPE
 
 
 @check_state
-def ask_age(update: Update, context: CallbackContext):
-    massage = update.message.text
-    chat_id = update.message.chat.id
-
-    if massage in (
-        text["active"],
-        text["educational"],
-        text["calming"],
-        text["family"],
-        text["task"],
-    ):
-        UM.current_users[chat_id].add_type(massage, 2)
-    elif massage == text["back"]:
-        if UM.current_users[chat_id].stage == 1:
-            UM.current_users[chat_id].stage = 0
-            return ask_location(update, context)
-    elif massage == text["trip"]:
-        pass
-    else:
-        return ask_location(update, context)
-
-    if massage == text["family"]:
-        print(UM.current_users[chat_id])
+def get_type(update: Update, context: CallbackContext):
+    log_message(update)
+    chat_id, massage = get_id_msg(update)
+    user_manager.current_users[chat_id].add_type(massage)
+    if massage == text["family"]:  # skip age question
         return ask_props(update, context)
+    return ask_age(update, context)
 
-    reply_keyboard = [
-        [text["2-3"]],
-        [text["3-4"]],
-        [text["4-6"]],
-        [text["6-8"]],
+
+def ask_age(update: Update, context: CallbackContext):
+    keyboard = [
+        [text["2-3"], text["3-4"]],
+        [text["4-6"], text["6-8"]],
         [text["back"]],
     ]
-    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(text["ask_age"], reply_markup=markup)
-    return State.ASK_PROPS
+
+    send_message_with_keyboard(text["ask_age"], keyboard, update)
+    return State.GET_AGE
 
 
 @check_state
+def get_age(update: Update, context: CallbackContext):
+    log_message(update)
+    chat_id, massage = get_id_msg(update)
+    user_manager.current_users[chat_id].add_age(massage)
+    return ask_props(update, context)
+
+
 def ask_props(update: Update, context: CallbackContext):
-    massage = update.message.text
+    keyboard = [[text["yes"]], [text["no"]], [text["back"]]]
+    send_message_with_keyboard(text["ask_props"], keyboard, update)
+    return State.GET_PROPS
+
+
+@check_state
+def get_props(update: Update, context: CallbackContext):
+    log_message(update)
+    chat_id, massage = get_id_msg(update)
+    user_manager.current_users[chat_id].add_props(massage)
+    return ask_games(update, context)
+
+
+@check_state
+def ask_games(update: Update, context: CallbackContext):
+    """search games or retrive from cache"""
     chat_id = update.message.chat.id
 
-    if massage in (text["2-3"], text["3-4"], text["4-6"], text["6-8"]):
-        UM.current_users[chat_id].add_age(massage, 3)
-    elif massage == text["family"]:
-        pass
-    elif massage == text["back"]:
-        if UM.current_users[chat_id].stage == 2:
-            UM.current_users[chat_id].stage = 1
-            return ask_type(update, context)
-    else:
-        return ask_type(update, context)
+    if user_manager.current_users[chat_id].games:
+        reply_keys = user_manager.current_users[chat_id].games
+    else:  # generate games
+        user_query = user_manager.current_users[chat_id].get_data()
+        user_games = db_interface.get_games(user_query)
 
-    reply_keyboard = [[text["yes"]], [text["no"]], [text["back"]]]
-    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(text["ask_props"], reply_markup=markup)
-    return State.RESULT
-
-
-def result(update: Update, context: CallbackContext):
-    massage = update.message.text
-    chat_id = update.message.chat.id
-
-    if massage not in (text["yes"], text["no"], text["back"]):
-        return ask_age(update, context)
-
-    if massage in (text["yes"], text["no"]):
-        UM.current_users[chat_id].add_props(massage, 4)
-    else:
-        if UM.current_users[chat_id].stage == 3:
-            UM.current_users[chat_id].stage = 2
-            return ask_age(update, context)
-        elif UM.current_users[chat_id].stage == 1:
-            UM.current_users[chat_id].stage = 0
-            return ask_type(update, context)
-        elif UM.current_users[chat_id].stage == 2:
-            return ask_age(update, context)
-
-    print(UM.current_users[chat_id])
-    if UM.current_users[chat_id].games is None:
-        user_data = UM.current_users[chat_id].get_data()
-        user_games = db_interface.get_games(*user_data)
         reply_keys = [[name[0]] for name in user_games]
-        UM.current_users[chat_id].add_games(reply_keys[:])
-    else:
-        reply_keys = UM.current_users[chat_id].games
+        user_manager.current_users[chat_id].games = reply_keys[:]  # cache keys copy
 
-    if reply_keys is None:
-        answer = text["no_result"]
-    else:
-        answer = text["result"]
+    msg_text = text["ask_games" if reply_keys else "no_result"]
 
-    reply_keyboard = list(map(lambda x: [x[0] + " " + choice(emoji)], reply_keys)) + [
-        [text["menu"]]
-    ]
-    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(text=answer, reply_markup=markup)
-    return State.ANSWER
+    def add_emoji(key: List[str]) -> List[str]:
+        return [key[0] + " " + choice(emoji)]
+
+    keyboard = list(map(add_emoji, reply_keys))
+    keyboard += [text["back"], text["menu"]]
+
+    send_message_with_keyboard(msg_text, keyboard, update)
+    return State.GET_GAME
 
 
-def final_answer(update: Update, context: CallbackContext):
+def get_games(update: Update, context: CallbackContext):
     massage = update.message.text
     chat_id = update.message.chat.id
 
-    if massage == text["menu"]:
-        UM.delete_user(chat_id)
-        return start(update, context)
-    UM.current_users[chat_id].stage = 5
+    game = massage[:-2].strip()  # remove emoji
+    if [game] not in user_manager.current_users[chat_id].games:
+        return State.GET_GAME  # igmore non games keys
 
-    # print(UM.current_users[chat_id].games)
-    game = massage[:-2].strip()
-    if [game] in UM.current_users[chat_id].games:
-        description = db_interface.get_game(game)
-        # print(description)
-    else:
-        print(f"\n{game}\n")
-        return result(update, context)
+    game_desc = db_interface.get_game(game)
 
-    if game in photos.keys():
+    if game in photos.keys():  # send img if exist
         img_path = os.path.join("images", photos[game])
         update.message.reply_photo(photo=open(img_path, "rb"), caption=game)
 
-    reply_keyboard = [[text["back"], text["menu"]]]
-    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(
-        text=description.replace("<br>", "\n"),
-        reply_markup=markup,
-        parse_mode=ParseMode.HTML,
-    )
+    game_desc = game_desc.replace("<br>", "\n")
+    keyboard = [[text["back"], text["menu"]]]
+
+    send_message_with_keyboard(game_desc, keyboard, update)
     return State.BACK_ANSWER
-
-
-def back_answer(update: Update, context: CallbackContext):
-    massage = update.message.text
-    chat_id = update.message.chat.id
-    if massage == text["back"]:
-        return result(update, context)
-    elif massage == text["menu"]:
-        UM.delete_user(chat_id)
-        return start(update, context)

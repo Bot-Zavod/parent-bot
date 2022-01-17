@@ -21,7 +21,7 @@ def restrict_user(func):
     def wrapper(update: Update, context: CallbackContext):
         if update.message.chat.id in ADMINS:
             return func(update, context)
-        update.message.reply_text(text["options_admin"]["not_boss"])
+        update.message.reply_text(text["not_boss"])
         return None
 
     return wrapper
@@ -32,14 +32,12 @@ def admin_menu(update: Update, context: CallbackContext):
     """show up basic admin menu"""
 
     reply_keyboard = [
-        [text["options_admin"]["push"], text["options_admin"]["users"]],
-        [text["options_admin"]["update_games"]],
+        [text["push"], text["users"]],
+        [text["update_games"]],
         [text["back"]],
     ]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    update.message.reply_text(
-        text=text["options_admin"]["hi_boss"], reply_markup=markup
-    )
+    update.message.reply_text(text=text["hi_boss"], reply_markup=markup)
     return State.ADMIN
 
 
@@ -61,7 +59,7 @@ def list_users(update: Update, context: CallbackContext):
 
 @restrict_user
 def ask_push_text(update: Update, context: CallbackContext):
-    update.message.reply_text(text=text["options_admin"]["ask_push_text"])
+    update.message.reply_text(text=text["ask_push_text"])
     return State.PUSH_WHAT
 
 
@@ -72,11 +70,11 @@ def set_push_text(update: Update, context: CallbackContext):
     answer = update.message.text
     PUSH_TEXT = answer
 
-    reply_keyboard = [[text["options_admin"]["send"], text["options_admin"]["no_send"]]]
+    reply_keyboard = [[text["send"], text["no_send"]]]
     markup = ReplyKeyboardMarkup(
         reply_keyboard, resize_keyboard=True, one_time_keyboard=True
     )
-    msg = text["options_admin"]["push_submit"].format(answer=answer)
+    msg = text["push_submit"].format(answer=answer)
     update.message.reply_text(text=msg, reply_markup=markup)
     return State.PUSH_SUBMIT
 
@@ -90,7 +88,5 @@ def push_handler(update: Update, context: CallbackContext):
     for chat_id in users_ids:
         context.bot.send_message(chat_id=chat_id, text=PUSH_TEXT)
     user_number = len(users_ids)
-    update.message.reply_text(
-        text=text["options_admin"]["push_success"].format(user_number=user_number)
-    )
+    update.message.reply_text(text=text["push_success"].format(user_number=user_number))
     return admin_menu(update, context)

@@ -1,5 +1,9 @@
 import threading
 import time
+from typing import Dict
+from typing import NamedTuple
+
+from loguru import logger
 
 from bot.data import text
 
@@ -7,7 +11,7 @@ from bot.data import text
 class UserManager:
     def __init__(self):
         self.user_removal_time = 3600
-        self.current_users = {}
+        self.current_users: Dict[int, User] = {}
         self.userthread = threading.Thread(target=self.__remove_old_users)
         self.userthread.start()
 
@@ -24,19 +28,14 @@ class UserManager:
                 self.delete_user(chat_id)
                 print(f"deleting user {chat_id}")
 
-    def delete_user(self, chat_id):
-        if chat_id in self.current_users:
+    def delete_user(self, chat_id: int):
+        try:
             del self.current_users[chat_id]
-        else:
-            print(f"[WARNING]DELETING UNEXISTING USER {chat_id}")
+        except KeyError:
+            logger.warning(f"DELETING UNEXISTING USER {chat_id}")
 
     def create_user(self, chat_id):
         self.current_users[chat_id] = User(chat_id)
-
-    # Users stored in dictionary with keys as
-    # Structure {
-    #   user_id: User-class object
-    # }
 
 
 def refresh_action(func):
@@ -48,43 +47,50 @@ def refresh_action(func):
     return wrapper_refresh_time
 
 
+class UserQuery(NamedTuple):
+    location: str
+    game_type: str
+    age: str
+    props: str
+
+
 class User:
-    def __init__(
-        self, chat_id, location=None, game_type=None, age=None, props=None, stage=0
-    ):
+    def __init__(self, chat_id, location=None, game_type=None, age=None, props=None):
         self.chat_id = chat_id
         self.location = location
         self.game_type = game_type
         self.age = age
         self.props = props
-        self.stage = stage
         self.last_activity_time = time.time()
         self.games = None
 
     def __str__(self):
-        user = f"chat_id: {self.chat_id}\nlocation: {self.location}\ntype: {self.game_type}\nage: {self.age}\nprops: {self.props}\nstage: {self.stage}"
+        user = f"chat_id: {self.chat_id}\nlocation: {self.location}\ntype: {self.game_type}\nage: {self.age}\nprops: {self.props}"
         return user
 
-    def get_data(self):
-        data = [self.location, self.game_type, self.age, self.props]
-        return data
+    def get_data(self) -> UserQuery:
+        return UserQuery(
+            location=self.location,
+            game_type=self.game_type,
+            age=self.age,
+            props=self.props,
+        )
 
     def update_time(self):
         self.last_activity_time = time.time()
 
     @refresh_action
-    def add_location(self, location, stage):
+    def add_location(self, location: str):
         if location == text["outside"]:
             self.location = "на улице"
         elif location == text["inside"]:
             self.location = "дома"
         elif location == text["trip"]:
             self.location = "в дороге"
-        self.stage = stage
         return location
 
     @refresh_action
-    def add_type(self, game_type, stage):
+    def add_type(self, game_type: str):
         if game_type == text["active"]:
             self.game_type = "активная"
         elif game_type == text["educational"]:
@@ -95,11 +101,10 @@ class User:
             self.game_type = "семейная"
         elif game_type == text["task"]:
             self.game_type = "сам"
-        self.stage = stage
         return game_type
 
     @refresh_action
-    def add_age(self, age, stage):
+    def add_age(self, age: str):
         if age == text["2-3"]:
             self.age = "2-3"
         elif age == text["3-4"]:
@@ -108,16 +113,14 @@ class User:
             self.age = "4-6"
         elif age == text["6-8"]:
             self.age = "6-8"
-        self.stage = stage
         return age
 
     @refresh_action
-    def add_props(self, props, stage):
+    def add_props(self, props: str):
         if props == text["yes"]:
             self.props = "да"
         elif props == text["no"]:
             self.props = "нет"
-        self.stage = stage
         return props
 
     @refresh_action
@@ -126,9 +129,4 @@ class User:
         return games
 
 
-UM = UserManager()
-# if __name__ == "__main__":
-#     user = User(100500)
-#     user.addQuestions([1,2,3,4,5])
-#     user.addAnswer(1, 0)
-#     print(user.answers)
+user_manager = UserManager()

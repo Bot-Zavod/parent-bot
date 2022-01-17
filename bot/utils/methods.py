@@ -7,8 +7,8 @@ from bot.states import State
 
 # def get_games_id(update,context):
 # 	db = DbInterface(getcwd() + "/database.db")
-# 	UM = UserManager()
-#     # answer = UM.current_users[update.message.chat.id]
+# 	user_manager = UserManager()
+#     # answer = user_manager.current_users[update.message.chat.id]
 #     game_id = []
 #     game_id += db.getGames(answer[0],answer[1],answer[2],answer[3],answer[4])
 

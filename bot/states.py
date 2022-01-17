@@ -1,13 +1,13 @@
 class State:
-    PAY = 1
+    MENU = 1
     GAMES = 2
     BACK = 3
-    ASK_TYPE = 4
-    ASK_AGE = 5
-    ASK_AMOUNT = 6
-    ASK_LOCATION = 7
-    ASK_PROPS = 8
-    RESULT = 9
+    GET_TYPE = 4
+    GET_AGE = 5
+    GET_AMOUNT = 6
+    GET_LOCATION = 7
+    GET_PROPS = 8
+    GET_GAME = 9
     ANSWER = 10
     BACK_ANSWER = 11
     ADMIN = 12
