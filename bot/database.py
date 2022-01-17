@@ -19,7 +19,8 @@ class DbInterface:
             # Games table
             """
             CREATE TABLE IF NOT EXISTS "games" (
-            "Name" TEXT,
+            "id" INTEGER UNIQUE NOT NULL PRIMARY KEY,
+            "name" TEXT,
             "description" TEXT,
             "location" TEXT,
             "age" TEXT,
@@ -81,12 +82,12 @@ class DbInterface:
         users_count = users[0][0]  # type: ignore
         return users_count
 
-    def get_users(self) -> list:
+    def get_users(self) -> List[int]:
         """return chat_id list of passed user category"""
         sql = "SELECT chat_id FROM Users"
-        answer = self.query([sql], fetch=True)
-        users = answer[0]  # type: ignore
-        return users
+        users = self.query([sql], fetch=True)
+        chat_ids = [chat_id[0] for chat_id in users]  # type: ignore
+        return chat_ids
 
     # ===========
     # GAMES
@@ -122,6 +123,13 @@ class DbInterface:
         args = [game]
         game = self.query([sql, args], fetch=True)  # type: ignore
         data = game[0][0]
+        return data
+
+    def get_random_game(self) -> str:
+        """return random game from"""
+        sql = "SELECT description FROM Games WHERE id IN (SELECT id FROM Games ORDER BY RANDOM() LIMIT 1)"
+        game = self.query([sql], fetch=True)
+        data = game[0][0]  # type: ignore
         return data
 
 

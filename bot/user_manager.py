@@ -1,4 +1,3 @@
-import threading
 import time
 from typing import Dict
 from typing import NamedTuple
@@ -10,23 +9,18 @@ from bot.data import text
 
 class UserManager:
     def __init__(self):
-        self.user_removal_time = 3600
+        self.user_removal_time: int = 60 * 60  # seconds
         self.current_users: Dict[int, User] = {}
-        self.userthread = threading.Thread(target=self.__remove_old_users)
-        self.userthread.start()
 
-    def __remove_old_users(self):
-        while True:
-            time.sleep(self.user_removal_time)
-            print("deleteCycle")
-            print(self.current_users)
-            users_to_delete = []
-            for user in self.current_users.values():
-                if time.time() - user.last_activity_time > self.user_removal_time:
-                    users_to_delete.append(user.chat_id)
-            for chat_id in users_to_delete:
-                self.delete_user(chat_id)
-                print(f"deleting user {chat_id}")
+    def remove_old_users(self, *args, **kwargs):
+        """Clear cache of results which have timed out"""
+        # args and kwargs need for calling it in job_queue
+        users_to_delete = []
+        for user in self.current_users.values():
+            if time.time() - user.last_activity_time > self.user_removal_time:
+                users_to_delete.append(user.chat_id)
+        for chat_id in users_to_delete:
+            self.delete_user(chat_id)
 
     def delete_user(self, chat_id: int):
         try:

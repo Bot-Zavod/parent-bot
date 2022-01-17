@@ -12,18 +12,18 @@ from bot.handlers.admin import set_push_text
 from bot.handlers.admin import update_games_tables
 from bot.handlers.base import start
 from bot.handlers.base import stop_bot
-from bot.handlers.questions import ask_age
-from bot.handlers.questions import ask_games
-from bot.handlers.questions import ask_location
-from bot.handlers.questions import ask_props
-from bot.handlers.questions import ask_type
-from bot.handlers.questions import get_age
-from bot.handlers.questions import get_games
-from bot.handlers.questions import get_location
-from bot.handlers.questions import get_props
-from bot.handlers.questions import get_type
+from bot.handlers.games import ask_age
+from bot.handlers.games import ask_games
+from bot.handlers.games import ask_location
+from bot.handlers.games import ask_props
+from bot.handlers.games import ask_type
+from bot.handlers.games import get_age
+from bot.handlers.games import get_games
+from bot.handlers.games import get_location
+from bot.handlers.games import get_props
+from bot.handlers.games import get_random_game
+from bot.handlers.games import get_type
 from bot.states import State
-from bot.utils.methods import *
 
 
 must_commands = [
@@ -33,7 +33,10 @@ must_commands = [
 ]
 
 states = {
-    State.MENU: [MessageHandler(Filters.text([text["games"]]), ask_location)],
+    State.MENU: [
+        MessageHandler(Filters.text([text["games"]]), ask_location),
+        MessageHandler(Filters.text([text["random"]]), get_random_game),
+    ],
     State.GET_LOCATION: [
         MessageHandler(Filters.text([text["inside"], text["outside"]]), get_location),
         MessageHandler(Filters.text([text["trip"]]), ask_age),  # skip type
@@ -61,7 +64,7 @@ states = {
         MessageHandler(Filters.text([text["back"]]), ask_type),
     ],
     State.GET_PROPS: [
-        MessageHandler(Filters.text([text["yes"]], [text["no"]]), get_props),
+        MessageHandler(Filters.text([text["yes"], text["no"]]), get_props),
         MessageHandler(Filters.text([text["back"]]), ask_age),
     ],
     State.GET_GAME: [
@@ -84,10 +87,8 @@ states = {
     ],
     State.PUSH_WHAT: [MessageHandler(Filters.text, set_push_text)],
     State.PUSH_SUBMIT: [
-        MessageHandler(
-            Filters.text([text["send"], text["no_send"]]),
-            push_handler,
-        )
+        MessageHandler(Filters.text([text["cancel"]]), admin_menu),
+        MessageHandler(Filters.text([text["send"]]), push_handler),
     ],
 }
 

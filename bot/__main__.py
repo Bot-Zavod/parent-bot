@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -12,8 +13,9 @@ from telegram.ext import Updater
 from bot.commands import clear_bot
 from bot.commands import set_bot_commands
 from bot.conv_handler import conv_handler
+from bot.handlers.base import error_handler
 from bot.handlers.base import terms
-from bot.utils.methods import *
+from bot.user_manager import user_manager
 
 
 logger.add(
@@ -60,10 +62,19 @@ def main():
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(CommandHandler("info", terms))
+    dispatcher.add_handler(conv_handler)
+    dispatcher.add_error_handler(error_handler)
 
-    # dispatcher.add_error_handler(error)
+    job = updater.job_queue
+
+    job.run_repeating(
+        callback=user_manager.remove_old_users,
+        interval=timedelta(hours=1),
+        first=0,
+        name="local cache",
+    )
+
     updater.start_polling()
     logger.debug("Bot launched succesfully")
     updater.idle()

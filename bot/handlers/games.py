@@ -1,10 +1,7 @@
 import os
-from functools import wraps
 from random import choice
 from typing import List
-from typing import Tuple
 
-from telegram import ReplyKeyboardMarkup
 from telegram import Update
 from telegram.ext import CallbackContext
 
@@ -12,32 +9,12 @@ from bot.data import emoji
 from bot.data import photos
 from bot.data import text
 from bot.database import db_interface
-from bot.handlers.base import start
 from bot.states import State
 from bot.user_manager import user_manager
 from bot.utils.log import log_message
-
-
-def check_state(func):
-    @wraps(func)
-    def wrapper(update: Update, context: CallbackContext):
-        chat_id = update.message.chat.id
-        if chat_id not in user_manager.current_users:
-            return start(update, context)
-        return func(update, context)
-
-    return wrapper
-
-
-def send_message_with_keyboard(msg: str, keyboard: list, update: Update):
-    markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    update.message.reply_text(text=msg, reply_markup=markup)
-
-
-def get_id_msg(update: Update) -> Tuple[int, str]:
-    chat_id = update.message.chat.id
-    massage = update.message.text
-    return chat_id, massage
+from bot.utils.tools import get_id_msg
+from bot.utils.tools import send_message_with_keyboard
+from bot.utils.wraps import check_state
 
 
 def ask_location(update: Update, context: CallbackContext):
@@ -107,7 +84,7 @@ def get_age(update: Update, context: CallbackContext):
 
 
 def ask_props(update: Update, context: CallbackContext):
-    keyboard = [[text["yes"]], [text["no"]], [text["back"]]]
+    keyboard = [[text["yes"], text["no"]], [text["back"]]]
     send_message_with_keyboard(text["ask_props"], keyboard, update)
     return State.GET_PROPS
 
@@ -140,12 +117,13 @@ def ask_games(update: Update, context: CallbackContext):
         return [key[0] + " " + choice(emoji)]
 
     keyboard = list(map(add_emoji, reply_keys))
-    keyboard += [text["back"], text["menu"]]
+    keyboard += [[text["back"], text["menu"]]]
 
     send_message_with_keyboard(msg_text, keyboard, update)
     return State.GET_GAME
 
 
+@check_state
 def get_games(update: Update, context: CallbackContext):
     massage = update.message.text
     chat_id = update.message.chat.id
@@ -165,3 +143,10 @@ def get_games(update: Update, context: CallbackContext):
 
     send_message_with_keyboard(game_desc, keyboard, update)
     return State.BACK_ANSWER
+
+
+def get_random_game(update: Update, context: CallbackContext):
+    game_desc = db_interface.get_random_game()
+    game_desc = game_desc.replace("<br>", "\n")
+    update.message.reply_text(text=game_desc)
+    return State.MENU

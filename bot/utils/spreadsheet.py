@@ -11,22 +11,22 @@ from bot.database import db_interface
 # https://github.com/burnash/gspread
 
 
+API_KEY_FILE = "google_api.json"
+GAMES_SHEET = os.getenv("GAMES_SHEET")
+SCOPE = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+]
+
+
 def get_spreadsheet() -> Spreadsheet:
     """return games spreadsheet"""
-    table = os.getenv("GAMES_SHEET")
-    tab = 0
-
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    path = "google_api.json"
-    full_path = os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
-    creds = ServiceAccountCredentials.from_json_keyfile_name(full_path, scope)
+    full_path = os.path.abspath(os.path.expanduser(os.path.expandvars(API_KEY_FILE)))
+    creds = ServiceAccountCredentials.from_json_keyfile_name(full_path, SCOPE)
     client = gspread.authorize(creds)
 
-    sheet = client.open_by_key(table)
-    sheet = sheet.get_worksheet(tab)
+    sheet = client.open_by_key(GAMES_SHEET)
+    sheet = sheet.get_worksheet(0)
     return sheet
 
 
@@ -34,6 +34,7 @@ def get_spreadsheet() -> Spreadsheet:
 def update_games() -> int:
     sheet = get_spreadsheet()
     games = sheet.get_all_values()
+    games = games[1:]  # remove headers
     games_num = len(games)
     db_interface.delete_games()
     games_to_insert = [[game[-1].strip()] + game[:5] for game in games]
